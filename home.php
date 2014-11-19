@@ -27,6 +27,13 @@
     
 </p>
 
+<form name="SearchForm" action="search.php" method="post" >
+
+<input type="submit" name="search" value="Search">
+
+</form>
+
+
 <form name="LogoutForm" action="login.php" method="post" >
 
 <input type="submit" name="logout" value="Logout">
