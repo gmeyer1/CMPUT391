@@ -7,6 +7,11 @@ $php_self = $_SERVER['PHP_SELF'];
 if(!empty($_POST) && isset($_POST['submitLogin'])) {
 	$user = $_POST['userid'];
 	$pass = $_POST['password'];
+        
+        
+        
+        
+        
 	//echo 'User: ' . $user . ' Pass: ' . $pass;
 	
 	//Check database

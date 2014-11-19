@@ -14,20 +14,72 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
 	$password = $_POST['password'];
 	$address = $_POST['address'];
 	$phone = $_POST['phone'];
+        $date = date('d.M.y');
 	
-
+        echo $date;
 	//Check if properly registered
 	//what are the restrictions on input?
 	//can any be left blank?
 	//check for valid input of every field?
 	//sanitize for possible sql injection, etc?
 	
-	//if (incorrect registration) {
-	//	$registered = false;
-	//}
-	//else {
-	//	insert new row into database
-	//}
+        //Check if valid registration
+	if (false) {
+            $registered = false;
+	}
+	else {
+            ini_set('display_errors', 1);
+            error_reporting(E_ALL);
+
+            //establish connection
+            $conn=connect();
+            if (!$conn) {
+                $e = oci_error();
+                trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+            }
+
+            //sql command
+            $sql = 'INSERT INTO users VALUES (\''.$username.'\',\''.$password.'\',\''.$date.'\')'; 
+            //Prepare sql using conn and returns the statement identifier
+            $stid = oci_parse($conn, $sql );
+
+            //Execute a statement returned from oci_parse()
+            $res=oci_execute($stid);
+
+
+            //if error, retrieve the error using the oci_error() function & output an error message
+
+            if (!$res) {
+                $err = oci_error($stid); 
+                echo htmlentities($err['message']);
+            }
+            else{
+                echo 'Row inserted into users';
+            }
+            
+            //sql command
+            $sql = 'INSERT INTO persons VALUES (\''.$username.'\',\''.$firstName.'\',\''.$lastName.'\',\''.$address.'\',\''.$email.'\',\''.$phone.'\')'; 
+            //Prepare sql using conn and returns the statement identifier
+            $stid = oci_parse($conn, $sql );
+
+            //Execute a statement returned from oci_parse()
+            $res=oci_execute($stid);
+
+
+            //if error, retrieve the error using the oci_error() function & output an error message
+
+            if (!$res) {
+                $err = oci_error($stid); 
+                echo htmlentities($err['message']);
+            }
+            else{
+                echo 'Row inserted into students';
+            }
+
+            // Free the statement identifier when closing the connection
+            oci_free_statement($stid);
+            oci_close($conn);
+	}
 
 
 	if($registered) {
