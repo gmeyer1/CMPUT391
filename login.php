@@ -9,19 +9,30 @@ if(!empty($_POST) && isset($_POST['submitLogin'])) {
 	$pass = $_POST['password'];
         
         
+        ini_set('display_errors', 1);
+        error_reporting(E_ALL);
+
+        //establish connection
+        $conn=connect();
+        if (!$conn) {
+            $e = oci_error();
+            trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+        }
+
+        //sql command
+        $sql = 'SELECT * FROM users u WHERE u.user_name = \'' . $user . '\' and u.password = \'' . $pass . '\''; 
+        //Prepare sql using conn and returns the statement identifier
+        $stid = oci_parse($conn, $sql );
+
+        //Execute a statement returned from oci_parse()
+        $res=oci_execute($stid);
         
-        
-        
-	//echo 'User: ' . $user . ' Pass: ' . $pass;
-	
-	//Check database
-	//if (invalid login) {
-	//	$wrongLogin = true;
-	//}
-	
-	if ($user == 'user2') {
-		$wrongLogin = false;
-	}	
+        if (!$res) {
+            $message = "Invalid username or password";
+        }
+        else if ($row = oci_fetch_array($stid, OCI_ASSOC)) {
+            $wrongLogin = false;
+        }
 	
 	if ($wrongLogin) {
 		$message = "Invalid username or password";
@@ -30,6 +41,10 @@ if(!empty($_POST) && isset($_POST['submitLogin'])) {
 		//start session, need to give a cookie?
 		redirect('home.php');
 	}
+        
+        // Free the statement identifier when closing the connection
+        oci_free_statement($stid);
+        oci_close($conn);
 		
 }
 
