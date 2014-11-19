@@ -83,7 +83,7 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
 
 
 	if($registered) {
-		redirect('login.php');
+		redirect('success.html');
 	}
 	else {
 		//More useful message?
