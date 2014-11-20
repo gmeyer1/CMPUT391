@@ -1,20 +1,46 @@
 <?php
-    include_once ("helper.php"); 
-    $message = "";
-    $php_self = $_SERVER['PHP_SELF'];
-    session_start();
-    if (!$_SESSION['username']) {
-        redirect('login.php');
-    }
+include_once ("helper.php"); 
+$message = "";
+$images = "";
+$php_self = $_SERVER['PHP_SELF'];
+session_start();
+if (!$_SESSION['username']) {
+    redirect('login.php');
+}
+
+if(!empty($_POST) && isset($_POST['submitSearch'])) {
+    // The user submitted information
+    $keywords = $_POST['keywords'];
+    $after = $_POST['after'];
+    $before = $_POST['before'];
+    $searchType = $_POST['searchType'];
+
+    //$message = "keywords: " . $keywords . ", after: " . $after . ", before: " . $before;
+    //Search for images based on submitted conditions
     
-    if(!empty($_POST) && isset($_POST['submitSearch'])) {
-        // The user submitted information
-	$keywords = $_POST['keywords'];
-	$after = $_POST['after'];
-        $before = $_POST['before'];
-        
-        $message = "keywords: " . $keywords . ", after: " . $after . ", before: " . $before;
+    
+    $images = '<br><tr><td>Search Results: </td></tr>';
+    while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+        $id = $row['PHOTO_ID'];
+        $data = $row['THUMBNAIL']->load();
+        $message = "in loop";
+        $images .= '<tr><td><a href=display.php?photo_id=' . $id . '><img src="data:image/jpeg;base64,'.base64_encode( $data ).'"/></a></td></tr>';            
     }
+}
+else {
+    $conn=connect();
+    $sql = 'SELECT thumbnail, photo_id FROM images';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+    
+    //Currently will show all images in database, need to find 5 most viewed
+    $images = '<br><tr><td>Popular Images: </td></tr>';
+    while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+        $id = $row['PHOTO_ID'];
+        $data = $row['THUMBNAIL']->load();
+        $images .= '<tr><td><a href=display.php?photo_id=' . $id . '><img src="data:image/jpeg;base64,'.base64_encode( $data ).'"/></a></td></tr>';            
+    }
+}
     
 ?>
 
@@ -67,8 +93,23 @@
 <td><input type="date" name="before"><br></td>
 </tr>
 
+<tr valign=top align=left>
+    <td><input type="submit" name="submitSearch" value="Search"></td>
+</tr>
 </table>
-<input type="submit" name="submitSearch" value="Search">
+
+
+
+
+<?php
+
+echo '<table>';
+echo $images;
+echo '</table>';
+
+?>
+
+</table>
 </form>
 
 </body>
