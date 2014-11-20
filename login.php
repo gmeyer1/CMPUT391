@@ -39,6 +39,9 @@ if(!empty($_POST) && isset($_POST['submitLogin'])) {
 	
 	if ($wrongLogin) {
             // If user supplied incorrect login
+            session_start();
+            session_regenerate_id();
+            session_destroy();
             $message = "Invalid username or password";
 	}
 	else {
