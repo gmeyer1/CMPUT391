@@ -40,6 +40,18 @@
 
 </form>
 
+<?php
+
+if($_SESSION['username'] == 'admin') {
+    
+?>
+<form name="OLAPForm" action="olap.php" method="get" >
+
+<input type="submit" value="OLAP Report">
+
+</form>
+       
+<?php }  ?>
 
 <form name="LogoutForm" action="login.php" method="post" >
 
