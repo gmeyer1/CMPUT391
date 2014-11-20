@@ -20,6 +20,13 @@
 </head>
 
 <body>
+    
+<form name="HomeForm" action="home.php" method="get" >
+
+<input type="submit" value="Home">
+
+</form>    
+
 <h1><center>OLAP</center></h1>
 
 <p>

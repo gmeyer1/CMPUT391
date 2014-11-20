@@ -5,10 +5,6 @@
     session_start();
     if (!$_SESSION['username']) {
         redirect('login.php');
-        $message = "redirected to login";
-    }
-    else {
-        $message = "logged in";        
     }
     
     if(!empty($_POST) && isset($_POST['submitSearch'])) {
@@ -37,7 +33,7 @@
 
     <?php
         
-        echo 'Hello ' . $_SESSION['username'] . ', message: ' . $message;// . ' session id: ' . session_id() . ", message: " . $message;
+        echo 'Hello ' . $_SESSION['username'];// . ', message: ' . $message;// . ' session id: ' . session_id() . ", message: " . $message;
 
     ?>
     
@@ -45,20 +41,32 @@
 
 
 <form name="SearchForm" action="<?php echo $php_self?>" method="post" >
+<table
+    
+<tr valign=top align=left>
+<td><b><i>Search method:</i></b></td>
+<td>
+<input type="radio" name="searchType" value="keywords" checked="checked">Keywords<br>
+<input type="radio" name="searchType" value="newest">Newest<br>
+<input type="radio" name="searchType" value="oldest">Oldest<br>
+</td>
+</tr>
 
-<table>
 <tr valign=top align=left>
 <td><b><i>Keywords:</i></b></td>
 <td><input type="text" name="keywords" value="keywords..." autofocus ><br></td>
 </tr>
+
 <tr valign=top align=left>
 <td><b><i>After Date:</i></b></td>
 <td><input type="date" name="after"><br></td>
 </tr>
+
 <tr valign=top align=left>
 <td><b><i>Before Date:</i></b></td>
 <td><input type="date" name="before"><br></td>
 </tr>
+
 </table>
 <input type="submit" name="submitSearch" value="Search">
 </form>

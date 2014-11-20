@@ -34,6 +34,13 @@ $user = $_SESSION['username'];
 </head>
 
 <body>
+    
+<form name="HomeForm" action="home.php" method="get" >
+
+<input type="submit" value="Home">
+
+</form>
+    
 <h1><center>Image</center></h1>
 
 <?php 
