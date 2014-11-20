@@ -1,8 +1,6 @@
-
 <?php
 
 require_once("helper.php");
-
    
     //echo '<p>Does this work or not?</p>';
     /*** assign the image id ***/

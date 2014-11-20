@@ -54,7 +54,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                 /*** our sql query ***/
                 $sql = 'INSERT INTO images VALUES (1,\'gmeyer1\',1,\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
                 
-                $stid = oci_parse($conn, $sql );
+                $stid = oci_parse($conn, $sql);
                 
                 $thumbnail_blob = oci_new_descriptor($conn, OCI_D_LOB);
                 $photo_blob = oci_new_descriptor($conn, OCI_D_LOB);
@@ -83,11 +83,10 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 
                 // Free the statement identifier when closing the connection
                 oci_free_statement($stid);
+                oci_close($conn);
                 
                 $photo_blob->free();
                 $thumbnail_blob->free();
-                
-                oci_close($conn);
                 }
             else
                 {
