@@ -64,7 +64,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 
                 //Execute a statement returned from oci_parse()
 
-                $res=oci_execute($stid);
+                $res=oci_execute($stid, OCI_NO_AUTO_COMMIT);
                 
                 if(!$thumbnail_blob->save($image) || !$photo_blob->save($image)) {
                     oci_rollback($conn);
