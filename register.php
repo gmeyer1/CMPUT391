@@ -101,6 +101,9 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
 </head>
 
 <body>
+    
+<input type=button onClick="parent.location='login.php'" value='Back'>
+
 <h1><center>Register</center></h1>
 
 
@@ -162,7 +165,7 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
 	</table>
 
 
-<input type='submit' name='submitRegister' value='Submit' />
+<input type='submit' name='submitRegister' value='Register' />
  
 </form>
 

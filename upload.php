@@ -8,6 +8,12 @@
 
 require_once("helper.php");
 
+session_start();
+if (!$_SESSION['username']) {
+    redirect('login.php');
+}
+
+
 $message = 'Select an image for upload';
 $registered = true;
 $php_self = $_SERVER['PHP_SELF'];
@@ -77,9 +83,6 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                 $err = oci_error($stid); 
                 echo htmlentities($err['message']);
                 }
-                else{
-                    echo 'Row inserted into students';
-                }
 
                 // Free the statement identifier when closing the connection
                 oci_free_statement($stid);
@@ -102,7 +105,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
         
                  
         
-        echo '<p>Thank you for submitting</p>';
+        $message = '<p>Thank you for submitting</p>';
         }
     catch(Exception $e)
         {
@@ -114,6 +117,12 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 <html>
 <head><title>Upload Image</title></head>
 <body>
+
+<form name="LogoutForm" action="home.php" method="post" >
+
+<input type="submit" name="home" value="Home">
+
+</form>
     
 <h1><center>Upload</center></h1>
 
@@ -149,7 +158,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 	</tr>
 	</table>
 
-<input type='submit' name='submitUpload' value='Submit' />
+<input type='submit' name='submitUpload' value='Upload' />
 
 </form>
 

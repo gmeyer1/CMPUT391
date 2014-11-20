@@ -1,7 +1,13 @@
 <?php
 
 require_once("helper.php");
-   
+
+
+session_start();
+if (!$_SESSION['username']) {
+    redirect('login.php');
+}
+
     //echo '<p>Does this work or not?</p>';
     /*** assign the image id ***/
     $conn=connect();

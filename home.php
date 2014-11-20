@@ -33,6 +33,12 @@
 
 </form>
 
+<form name="UploadForm" action="upload.php" method="post" >
+
+<input type="submit" name="upload" value="Upload">
+
+</form>
+
 
 <form name="LogoutForm" action="login.php" method="post" >
 

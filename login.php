@@ -29,7 +29,7 @@ if(!empty($_POST) && isset($_POST['submitLogin'])) {
         $res=oci_execute($stid);
         
         if (!$res) {
-            // If there was some problem executing the statement
+            // If there was some problem executing the statement?
             $message = "Invalid username or password";
         }
         else if ($row = oci_fetch_array($stid, OCI_ASSOC)) {
@@ -67,7 +67,7 @@ if(!empty($_POST) && isset($_POST['logout'])) {
     session_start();
     session_regenerate_id();
     session_destroy();
-    $message = 'Successfully logged out, session id: ' . session_id();
+    $message = 'Successfully logged out'; //, session id: ' . session_id();
 }
 
 
@@ -98,6 +98,4 @@ if(!empty($_POST) && isset($_POST['logout'])) {
 <input type="submit" name="submitLogin" value="Login">
 </form>
 
-<hr>
-
-<input type=button onClick="parent.location='register.php'" value='Register'>
+<input type=button onClick="parent.location='register.php'" value='Register...'>
