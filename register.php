@@ -46,14 +46,13 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
             //Execute a statement returned from oci_parse()
             $res=oci_execute($stid);
 
-
-            //if error, retrieve the error using the oci_error() function & output an error message
-
             if (!$res) {
+                //rollback?
                 $err = oci_error($stid); 
                 echo htmlentities($err['message']);
             }
             else{
+                //oci_commit($conn);  
                 echo 'Row inserted into users';
             }
             
@@ -65,14 +64,13 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
             //Execute a statement returned from oci_parse()
             $res=oci_execute($stid);
 
-
-            //if error, retrieve the error using the oci_error() function & output an error message
-
             if (!$res) {
+                //rollback??
                 $err = oci_error($stid); 
                 echo htmlentities($err['message']);
             }
             else{
+                //oci_commit($conn);  
                 echo 'Row inserted into students';
             }
 

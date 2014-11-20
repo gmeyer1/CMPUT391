@@ -60,6 +60,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                 $message = '<p>Building query</p>';
                 
                 /*** our sql query ***/
+                // Need to assign a unique ID to every picture, and somehow let the uploader choose group for permission
                 $sql = 'INSERT INTO images VALUES (1,\''.$user.'\',1,\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
                 
                 $stid = oci_parse($conn, $sql);

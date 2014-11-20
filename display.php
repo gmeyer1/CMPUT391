@@ -13,10 +13,36 @@ $subject = "subject";
 $place = "place";
 $description = "description";
 $owner = "";
+$deleted = 0;
 
-if (!empty($_POST) && isset($_POST['photo_id'])) {
+if (!empty($_POST) && isset($_POST['submitEdit'])) {
     //Need to save new image values, and should probably check again that current user is owner
     
+}
+else if (!empty($_POST) && isset($_POST['submitDelete'])) {
+    //If owner clicked delete button, remove this image from database
+    //Should probably check again that current user is owner
+    $conn=connect();
+    $photo_id = $_POST['photo_id'];
+
+    $sql = 'DELETE FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $stid = oci_parse($conn, $sql);
+    $row = oci_execute($stid, OCI_DEFAULT);  
+    if($row) {
+        if (oci_commit($conn)) {
+            $deleted = 1;
+        }
+        else {
+            $err = oci_error($stid); 
+            echo htmlentities($err['message']);
+        }        
+    }  
+    else { 
+        $err = oci_error($stid); 
+        echo htmlentities($err['message']);
+    }
+    oci_free_statement($stid);
+    oci_close($conn);
 }
 else if (!empty($_GET) && isset($_GET['photo_id'])) {
 
@@ -35,6 +61,8 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
         $owner = $row['OWNER_NAME'];
         $imageTag = '<img src="data:image/jpeg;base64,'.base64_encode( $data ).'"/>';
     }
+    oci_free_statement($stid);
+    oci_close($conn);
 }
     
 ?>
@@ -66,6 +94,8 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
 <form id='edit' action="<?php echo $php_self?>" method='post'
     accept-charset='UTF-8'>
 
+<input type='hidden' name='photo_id' value='<?php echo $photo_id ?>' />
+    
 <table>
     <tr valign=top align=left>
     <td>
@@ -96,6 +126,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
 if ($user == $owner) {
 ?>
 <input type='submit' name='submitEdit' value='Save' />
+<input type='submit' name='submitDelete' value='Delete' />
 <?php
 }
 ?>
@@ -106,6 +137,9 @@ if ($user == $owner) {
 
 <?php
     } //End of if image exists
+    else if ($deleted) {
+        echo 'Image deleted';
+    }
     else {
         echo 'Image not found';
     }
