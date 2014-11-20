@@ -57,7 +57,7 @@
 </tr>
 <tr valign=top align=left>
 <td><b><i>Before Date:</i></b></td>
-<td><input type="before" name="before"><br></td>
+<td><input type="date" name="before"><br></td>
 </tr>
 </table>
 <input type="submit" name="submitSearch" value="Search">
