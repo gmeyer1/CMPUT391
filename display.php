@@ -8,6 +8,8 @@ if (!$_SESSION['username']) {
     redirect('login.php');
 }
 
+$user = $_SESSION['username'];
+
     //echo '<p>Does this work or not?</p>';
     /*** assign the image id ***/
     $conn=connect();
@@ -17,9 +19,41 @@ if (!$_SESSION['username']) {
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
     if (!$row) {
-        header('Status: 404 Not Found');
+        $image = 'Image not found';
     } else {
         $img = $row['PHOTO']->load();
-        header("Content-type: image/jpeg");
-        echo $img;
+        $image = '<img src="data:image/jpeg;base64,'.base64_encode( $img ).'"/>';
     }
+    
+?>
+
+
+<html>
+<head>
+<title>Image</title>
+</head>
+
+<body>
+<h1><center>Image</center></h1>
+
+<?php 
+    if ($img) {
+        
+        //Check that current user can view image
+        //if ($user is in group to view this image) {
+        echo $image;
+        //}
+        
+        //Check that current user can edit image
+        //if ($user owns image) {
+        //  Display a form with current values, allow user to edit and submit??
+        //
+    }
+    else {
+        echo 'Image not found';
+    }
+
+ ?>
+
+</body>
+</html>

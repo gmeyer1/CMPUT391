@@ -13,6 +13,8 @@ if (!$_SESSION['username']) {
     redirect('login.php');
 }
 
+$user = $_SESSION['username'];
+
 
 $message = 'Select an image for upload';
 $registered = true;
@@ -58,7 +60,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                 $message = '<p>Building query</p>';
                 
                 /*** our sql query ***/
-                $sql = 'INSERT INTO images VALUES (1,\'gmeyer1\',1,\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
+                $sql = 'INSERT INTO images VALUES (1,\''.$user.'\',1,\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
                 
                 $stid = oci_parse($conn, $sql);
                 
