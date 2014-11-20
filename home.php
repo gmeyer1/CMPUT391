@@ -19,6 +19,7 @@
 <body>
 <h1><center>Home</center></h1>
 
+<p>
     <?php
         
         echo 'Hello ' . $_SESSION['username'];// . ' session id: ' . session_id() . ", message: " . $message;
@@ -27,15 +28,15 @@
     
 </p>
 
-<form name="SearchForm" action="search.php" method="post" >
+<form name="SearchForm" action="search.php" method="get" >
 
-<input type="submit" name="search" value="Search">
+<input type="submit" value="Search">
 
 </form>
 
-<form name="UploadForm" action="upload.php" method="post" >
+<form name="UploadForm" action="upload.php" method="get" >
 
-<input type="submit" name="upload" value="Upload">
+<input type="submit" value="Upload">
 
 </form>
 

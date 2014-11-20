@@ -118,9 +118,9 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 <head><title>Upload Image</title></head>
 <body>
 
-<form name="LogoutForm" action="home.php" method="post" >
+<form name="HomeForm" action="home.php" method="get" >
 
-<input type="submit" name="home" value="Home">
+<input type="submit" value="Home">
 
 </form>
     

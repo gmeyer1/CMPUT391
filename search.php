@@ -28,9 +28,9 @@
 </head>
 
 <body>
-<form name="LogoutForm" action="home.php" method="post" >
+<form name="HomeForm" action="home.php" method="get" >
 
-<input type="submit" name="home" value="Home">
+<input type="submit" value="Home">
 
 </form>
 <h1><center>Search</center></h1>
