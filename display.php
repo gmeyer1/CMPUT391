@@ -101,7 +101,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
     <td>
         <b><i>Subject*: </i></b></td>
     <td>
-        <input type='text' name='subject' value="<?php echo $subject ?>" id='subject' maxlength="128" <?php if ($user != $owner) { echo 'readonly'; } ?>
+        <input type='text' name='subject' value="<?php echo $subject ?>" id='subject' maxlength="128" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>
         /><br>
     </td>
     </tr>
@@ -109,21 +109,21 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
     <td>
         <b><i>Place*: </i></b></td>
     <td>
-        <input type='text' name='place' value="<?php echo $place ?>" id='place' maxlength="128" <?php if ($user != $owner) { echo 'readonly'; } ?>/><br>
+        <input type='text' name='place' value="<?php echo $place ?>" id='place' maxlength="128" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
     </td>
     </tr>
     <tr valign=top align=left>
     <td>
         <b><i>Description*: </i></b></td>
     <td>
-        <input type='text' name='description' value="<?php echo $description  ?>" id='description' maxlength="2048" <?php if ($user != $owner) { echo 'readonly'; } ?>/><br>
+        <input type='text' name='description' value="<?php echo $description  ?>" id='description' maxlength="2048" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
     </td>
     </tr>
     </table>
 
 <?php
 // If user is owner, display the Save button
-if ($user == $owner) {
+if ($user == $owner || $user == 'admin') {
 ?>
 <input type='submit' name='submitEdit' value='Save' />
 <input type='submit' name='submitDelete' value='Delete' />
