@@ -32,6 +32,8 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
             //$size = getimagesize($_FILES['userfile']['tmp_name']);
             /*** assign our variables ***/
             $image = file_get_contents($_FILES['userfile']['tmp_name']);
+            $thumbnail = thumbnail($_FILES['userfile']['tmp_name']);
+            
             //$size = $size[3];
             $name = $_FILES['userfile']['name'];
             $maxsize = 99999999;
@@ -55,11 +57,8 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                 $sql = 'SELECT MAX(photo_id) FROM images';
                 $stid = oci_parse($conn, $sql);
                 oci_execute($stid);
-
-                oci_execute($stid, OCI_DEFAULT); 
                 
                 $row = oci_fetch_array($stid);
-                
 
                 if($row) {
                     $curr_id = $row['MAX(PHOTO_ID)'];
@@ -87,7 +86,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 
                 $res=oci_execute($stid, OCI_NO_AUTO_COMMIT);
                 
-                if(!$thumbnail_blob->save($image) || !$photo_blob->save($image)) {
+                if(!$thumbnail_blob->save($thumbnail) || !$photo_blob->save($image)) {
                     oci_rollback($conn);
                 }
                 else {
@@ -127,6 +126,45 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
         echo '<h4>'.$e->getMessage().'</h4>';
         }
     }
+    
+// https://docs.oracle.com/cd/B28359_01/appdev.111/b28845/ch7.htm    
+function thumbnail($imgfile) {  
+    define('MAX_THUMBNAIL_DIMENSION', 100);
+    list($w, $h, $type) = getimagesize($imgfile);
+    
+    switch ($type) 
+    {
+        case IMAGETYPE_GIF: 
+            $src_img = imagecreatefromgif($imgfile); 
+            break;   
+        case IMAGETYPE_JPEG:  
+            $src_img = imagecreatefromjpeg($imgfile); 
+            break;   
+        case IMAGETYPE_PNG:  
+            $src_img = imagecreatefrompng($imgfile);
+            break; 
+        default:
+            throw new Exception('Unrecognized image type ' . $type);
+    }
+    
+    if ($w > MAX_THUMBNAIL_DIMENSION || $h > MAX_THUMBNAIL_DIMENSION)
+    {
+      $scale =  MAX_THUMBNAIL_DIMENSION / (($h > $w) ? $h : $w);
+      $nw = $w * $scale;
+      $nh = $h * $scale;
+
+      $dest_img = imagecreatetruecolor($nw, $nh);
+      imagecopyresampled($dest_img, $src_img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+
+      imagejpeg($dest_img, $imgfile);  // overwrite file with new thumbnail
+
+      imagedestroy($src_img);
+      imagedestroy($dest_img);
+    }
+    
+    return file_get_contents($imgfile);
+}
+    
 ?>
 
 <html>
