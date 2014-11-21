@@ -1,11 +1,5 @@
 <?php
 
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 require_once("helper.php");
 
 session_start();
@@ -35,11 +29,10 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
         if(is_uploaded_file($_FILES['userfile']['tmp_name']) && getimagesize($_FILES['userfile']['tmp_name']) != false)
             {
             /***  get the image info. ***/
-            $size = getimagesize($_FILES['userfile']['tmp_name']);
+            //$size = getimagesize($_FILES['userfile']['tmp_name']);
             /*** assign our variables ***/
-            $type = $size['mime'];
             $image = file_get_contents($_FILES['userfile']['tmp_name']);
-            $size = $size[3];
+            //$size = $size[3];
             $name = $_FILES['userfile']['name'];
             $maxsize = 99999999;
 
@@ -56,12 +49,31 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                     $e = oci_error();
                     trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
                 }
+                
+                $curr_id = 0;
+        
+                $sql = 'SELECT MAX(photo_id) FROM images';
+                $stid = oci_parse($conn, $sql);
+                oci_execute($stid);
+
+                oci_execute($stid, OCI_DEFAULT); 
+                
+                $row = oci_fetch_array($stid);
+                
+
+                if($row) {
+                    $curr_id = $row['MAX(PHOTO_ID)'];
+                }
+
+                $curr_id++;
+
+                oci_free_statement($stid);
 
                 $message = '<p>Building query</p>';
                 
                 /*** our sql query ***/
                 // Need to assign a unique ID to every picture, and somehow let the uploader choose group for permission
-                $sql = 'INSERT INTO images VALUES (1,\''.$user.'\',1,\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
+                $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',1,\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
                 
                 $stid = oci_parse($conn, $sql);
                 
