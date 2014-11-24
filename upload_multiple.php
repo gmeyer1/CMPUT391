@@ -14,12 +14,18 @@ $message = 'Select an image for upload';
 $registered = true;
 $php_self = $_SERVER['PHP_SELF'];
 
-if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']))
+define('MAX_THUMBNAIL_DIMENSION', 100);
+
+date_default_timezone_set('America/Denver');
+
+if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles']))
     {
     
-    $message = '<p>Submitted</p>';
+    $message = '<p>Received, uploading</p>';
     
-    foreach ($_FILES['files']['name'] as $i => $name) {
+    foreach ($_FILES['userfiles']['name'] as $i => $name) {
+        
+        $message = '<p>In foreach</p>';
         try    {
 
             $subject = $_POST['subject'];
@@ -27,21 +33,21 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
             $description = $_POST['description'];
             $date = date('d.M.y');
 
-            if(is_uploaded_file($_FILES['userfile']['tmp_name'][$i]) && getimagesize($_FILES['userfile']['tmp_name'][$i]) != false)
+            if(is_uploaded_file($_FILES['userfiles']['tmp_name'][$i]) && getimagesize($_FILES['userfiles']['tmp_name'][$i]) != false)
                 {
                 /***  get the image info. ***/
                 //$size = getimagesize($_FILES['userfile']['tmp_name']);
                 /*** assign our variables ***/
-                $image = file_get_contents($_FILES['userfile']['tmp_name'][$i]);
-                $thumbnail = thumbnail($_FILES['userfile']['tmp_name'][$i]);
+                $image = file_get_contents($_FILES['userfiles']['tmp_name'][$i]);
+                $thumbnail = thumbnail($_FILES['userfiles']['tmp_name'][$i]);
 
                 //$size = $size[3];
-                $name = $_FILES['userfile']['name'][$i];
+                $name = $_FILES['userfiles']['name'][$i];
                 $maxsize = 99999999;
 
 
                 /***  check the file is less than the maximum file size ***/
-                if($_FILES['userfile']['size'][$i] < $maxsize )
+                if($_FILES['userfiles']['size'][$i] < $maxsize )
                     {
                     ini_set('display_errors', 1);
                     error_reporting(E_ALL);
@@ -132,7 +138,6 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
     
 // https://docs.oracle.com/cd/B28359_01/appdev.111/b28845/ch7.htm    
 function thumbnail($imgfile) {  
-    define('MAX_THUMBNAIL_DIMENSION', 100);
     list($w, $h, $type) = getimagesize($imgfile);
     
     switch ($type) 
@@ -188,7 +193,7 @@ function thumbnail($imgfile) {
 <p><?php echo $message ?></p>
 
 <input type='hidden' name='MAX_FILE_SIZE' value='99999999' />
-<input type="file" name="userfile" id="userfile" multiple="" directory="" webkitdirectory="" mozdirectory="" />
+<input type="file" name="userfiles[]" id="userfile" multiple="" directory="" webkitdirectory="" mozdirectory="" />
 
 <table>
 	<tr valign=top align=left>

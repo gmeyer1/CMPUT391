@@ -40,6 +40,12 @@
 
 </form>
 
+<form name="UploadForm" action="upload_multiple.php" method="get" >
+
+<input type="submit" value="Upload Folder">
+
+</form>
+
 <?php
 
 if($_SESSION['username'] == 'admin') {
