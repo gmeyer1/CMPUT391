@@ -7,6 +7,7 @@ if (!$_SESSION['username']) {
 }
 $image = 'Image not found';
 $user = $_SESSION['username'];
+$user_groups = array();
 $photo_id = 0;
 $php_self = $_SERVER['PHP_SELF'];
 $subject = "subject";
@@ -15,6 +16,8 @@ $description = "description";
 $owner = "";
 $deleted = 0;
 $updated = 0;
+$photo_group = -1;
+$conn=connect();
 
 if (!empty($_POST) && isset($_POST['submitEdit'])) {
     //Need to save new image values, and should probably check again that current user is owner
@@ -23,8 +26,24 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
     $description = $_POST['description'];
     $subject = $_POST['subject'];
     
-    $conn=connect();
     $photo_id = $_POST['photo_id'];
+    
+    $sql = 'SELECT owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+    $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+    if ($row) {
+        $owner = $row['OWNER_NAME'];
+        $permitted = $row['PERMITTED'];
+        if ($owner != $user) {
+            redirect('search.php');
+        }
+    }
+    else {
+        redirect('search.php');
+    }
+        
+    oci_free_statement($stid);    
 
     $sql = 'UPDATE images SET subject=\'' . $subject . '\', place=\'' . $place . '\', description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
@@ -46,10 +65,25 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
     oci_close($conn);
 }
 else if (!empty($_POST) && isset($_POST['submitDelete'])) {
-    //If owner clicked delete button, remove this image from database
-    //Should probably check again that current user is owner
-    $conn=connect();
+    
     $photo_id = $_POST['photo_id'];
+    
+    $sql = 'SELECT owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+    $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+    if ($row) {
+        $owner = $row['OWNER_NAME'];
+        $permitted = $row['PERMITTED'];
+        if ($owner != $user) {
+            redirect('search.php');
+        }
+    }
+    else {
+        redirect('search.php');
+    }
+    
+    oci_free_statement($stid);
 
     $sql = 'DELETE FROM images WHERE photo_id = \'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
@@ -74,9 +108,8 @@ else if (!empty($_POST) && isset($_POST['submitDelete'])) {
 else if (!empty($_GET) && isset($_GET['photo_id'])) {
 
     $photo_id = $_GET['photo_id'];
-    $conn=connect();
 
-    $sql = 'SELECT photo, subject, place, description, owner_name FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $sql = 'SELECT photo, subject, place, description, owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
@@ -86,11 +119,39 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
         $place = $row['PLACE'];
         $description = $row['DESCRIPTION'];
         $owner = $row['OWNER_NAME'];
+        $permitted = $row['PERMITTED'];
         $imageTag = '<img src="data:image/jpeg;base64,'.base64_encode( $data ).'"/>';
     }
+    else {
+        redirect('search.php');
+    }
+    
     oci_free_statement($stid);
-    oci_close($conn);
+    
 }
+
+if ($permitted == -1) {
+    redirect('search.php', $conn);
+}
+else if ($owner != $user && $user != 'admin' && $permitted != 1) {
+    
+    $sql = 'select group_id from group_lists where friend_id=\'' . $user . '\'';
+
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid, OCI_DEFAULT);
+
+    while ($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+        $group_id = $row['GROUP_ID'];
+        $user_groups[] = $group_id;
+    }
+    oci_free_statement($stid);
+    
+    if (!in_array($permitted, $user_groups)) {
+        redirect('search.php');
+    }
+}
+
+oci_close($conn);
     
 ?>
 
