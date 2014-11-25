@@ -73,31 +73,41 @@ else if (isset($_POST['addUser'])) {
     $notice = $_POST['notice'];
     $date = date('d.M.y');
     
-    $sql = 'SELECT user_name FROM users WHERE user_name = \'' . $user_name . '\'';
+    $sql = 'SELECT friend_id FROM group_lists WHERE friend_id = \'' . $user_name . '\' and group_id = \'' . $group_id . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
     if ($row) {
-        
-        oci_free_statement($stid);
-
-        $sql = 'INSERT INTO group_lists VALUES (\''.$group_id.'\',\''.$user_name.'\',\''.$date.'\',\''.$notice.'\')'; 
-
-        $stid = oci_parse($conn, $sql);
-        $res=oci_execute($stid);
-
-        if (!$res) {
-            $err = oci_error($stid); 
-            $message .= htmlentities($err['message']);
-            $message .= "<br/>Could not add " . $user_name . " to group";
-        }
-        else{ 
-            $message = 'Added ' . $user_name . ' to group';
-        }
-
+        $message = $user_name . " is already in group " . $group_name;
     }
     else {
-        $message = $user_name . ' does not exist';
+
+        $sql = 'SELECT user_name FROM users WHERE user_name = \'' . $user_name . '\'';
+        $stid = oci_parse($conn, $sql);
+        oci_execute($stid);
+        $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+        if ($row) {
+
+            oci_free_statement($stid);
+
+            $sql = 'INSERT INTO group_lists VALUES (\''.$group_id.'\',\''.$user_name.'\',\''.$date.'\',\''.$notice.'\')'; 
+
+            $stid = oci_parse($conn, $sql);
+            $res=oci_execute($stid);
+
+            if (!$res) {
+                $err = oci_error($stid); 
+                $message .= htmlentities($err['message']);
+                $message .= "<br/>Could not add " . $user_name . " to group";
+            }
+            else{ 
+                $message = 'Added ' . $user_name . ' to group';
+            }
+
+        }
+        else {
+            $message = $user_name . ' does not exist';
+        }
     }
     oci_free_statement($stid);
 }
@@ -207,7 +217,7 @@ People in group:
     <?php
     }
     else {
-        echo '<p>No groups</p>';
+        echo '<p>No group members</p>';
     }
     
     ?>
