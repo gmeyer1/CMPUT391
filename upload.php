@@ -74,21 +74,23 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                     trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
                 }
                 
-                $curr_id = 0;
-        
-                $sql = 'SELECT MAX(photo_id) FROM images';
-                $stid = oci_parse($conn, $sql);
-                oci_execute($stid);
+//                $curr_id = 0;
+//        
+//                $sql = 'SELECT MAX(photo_id) FROM images';
+//                $stid = oci_parse($conn, $sql);
+//                oci_execute($stid);
+//                
+//                $row = oci_fetch_array($stid);
+//
+//                if($row) {
+//                    $curr_id = $row['MAX(PHOTO_ID)'];
+//                }
+//
+//                $curr_id++;
+//
+//                oci_free_statement($stid);
                 
-                $row = oci_fetch_array($stid);
-
-                if($row) {
-                    $curr_id = $row['MAX(PHOTO_ID)'];
-                }
-
-                $curr_id++;
-
-                oci_free_statement($stid);
+                $curr_id = hexdec(uniqid());
 
                 $message = '<p>Building query</p>';
                 
