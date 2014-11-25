@@ -16,6 +16,11 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
 	$phone = $_POST['phone'];
         $date = date('d.M.y');
         
+        if (empty($firstName) || empty($lastName) || empty($email) || empty($username) || empty($password) || empty($address) || empty($phone)) {
+            $valid = false;
+            $message = "Fields with a (*) are required";
+        }
+        
         //Add a check that no field is blank
         
         $conn=connect();
@@ -24,7 +29,7 @@ if(!empty($_POST) && isset($_POST['submitRegister'])) {
             $valid = false;
             $message = $e;
         }
-        else {
+        else if ($valid) {
             $sql = 'SELECT user_name FROM persons WHERE user_name = \'' . $username . '\' or email = \'' . $email . '\'';
             $stid = oci_parse($conn, $sql);
             oci_execute($stid);
