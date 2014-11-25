@@ -55,6 +55,7 @@ else if (!empty($_POST) && isset($_POST['submitDelete'])) {
     $stid = oci_parse($conn, $sql);
     $row = oci_execute($stid, OCI_DEFAULT);  
     if($row) {
+        // This might not be needed??
         if (oci_commit($conn)) {
             $deleted = 1;
         }

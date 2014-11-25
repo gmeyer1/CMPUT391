@@ -16,6 +16,8 @@ $group_name = "";
 $group_owner = "";
 $users = "";
 $message = "";
+$deleted = 0;
+$deleted_users = 0;
 
 $conn=connect();
 
@@ -35,8 +37,38 @@ else {
 }
 oci_free_statement($stid);
 
+if (isset($_POST['deleteGroup'])) {
+    echo 'About to delete group ' . $group_name;
+    $sql = 'DELETE FROM group_lists WHERE group_id = \'' . $group_id . '\'';
+    $stid = oci_parse($conn, $sql);
+    $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
+    if($row) {
+        $deleted_users = 1;
+    }
+    else {
+        $message .= "Could not remove users from group " . $group_name . "<br/>";
+    }
     
-if (!empty($_POST) && isset($_POST['addUser'])) {
+    oci_free_statement($stid);
+    
+    $sql = 'DELETE FROM groups WHERE group_id = \'' . $group_id . '\'';
+    $stid = oci_parse($conn, $sql);
+    $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
+    if($row) {
+        if (oci_commit($conn)) {
+            $deleted = 1;
+        }
+        else {
+            $message .= "Could not commit to delete group " . $group_name;
+        }  
+    }
+    else {
+        $message .= "Could not delete group " . $group_name;
+    }
+    
+    oci_free_statement($stid);
+}
+else if (isset($_POST['addUser'])) {
     $user_name = $_POST['user_name'];
     $notice = $_POST['notice'];
     $date = date('d.M.y');
@@ -89,17 +121,19 @@ else if (isset($_POST['removeUser'])) {
     
 }
 
-$sql = 'select friend_id from group_lists where group_id=\'' . $group_id . '\'';
+if (!$deleted) {
+    $sql = 'select friend_id from group_lists where group_id=\'' . $group_id . '\'';
 
-$stid = oci_parse($conn, $sql);
-oci_execute($stid, OCI_DEFAULT);
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid, OCI_DEFAULT);
 
-while ($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
-    $friend_id = $row['FRIEND_ID'];
-    $users .= '<option value="'.$friend_id.'">'.$friend_id.'</option>';
+    while ($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+        $friend_id = $row['FRIEND_ID'];
+        $users .= '<option value="'.$friend_id.'">'.$friend_id.'</option>';
+    }
+
+    oci_free_statement($stid);
 }
-
-oci_free_statement($stid);
 
 oci_close($conn);
 
@@ -125,23 +159,31 @@ oci_close($conn);
 
 </form>
     
-<h1><center>Group
+    
+<?php echo $message . '<br/>'?>
+    
+<h1><center>
+        
+<?php
+if ($deleted) {
+    echo 'Deleted group ' . $group_name;
+}
+else {
+?>
+    
+    
+Edit Group
 
 
 <?php
-    //If the image exists, show all its information
-    //TODO: add a check that the user has permission to view it
-    if ($group_name) {
-        echo ': ' . $group_name;
+    echo ': ' . $group_name;
     
 ?>
 
 </center></h1>
       
 <?php
-    echo $message . '<br/>';
-
-    if ($users) {
+        if ($users) {
 ?>
 
 <form id='remove' action="<?php echo $php_self?>" method='post'
@@ -163,7 +205,6 @@ People in group:
     
            
     <?php
-    }
     }
     else {
         echo '<p>No groups</p>';
@@ -205,6 +246,13 @@ People in group:
 
 
 </form>
+    
+<?php
+
+}
+
+?>
+    
 
 </body>
 </html>

@@ -9,6 +9,46 @@ if (!$_SESSION['username']) {
 $user = $_SESSION['username'];
 $php_self = $_SERVER['PHP_SELF'];
 $conn=connect();
+
+
+if (isset($_POST['addGroup'])) {
+    $group_name = $_POST['group_name'];
+    $curr_id = 0;
+        
+    $sql = 'SELECT MAX(group_id) FROM groups';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+     
+    $row = oci_fetch_array($stid);
+
+    if($row) {
+        $curr_id = $row['MAX(GROUP_ID)'];
+    }
+
+    $curr_id++;
+    
+    oci_free_statement($stid);
+    
+    $date = date('d.M.y');
+    $sql = 'INSERT INTO groups VALUES (\''.$curr_id.'\',\''.$user.'\',\''.$group_name.'\',\''.$date.'\')'; 
+
+    $stid = oci_parse($conn, $sql);
+    $res=oci_execute($stid);
+
+    if (!$res) {
+        $err = oci_error($stid); 
+        $message .= htmlentities($err['message']);
+        $message .= "<br/>Could not create group " . $group_name;
+    }
+    else{ 
+        $message = 'Created group ' . $group_name;
+    }
+    
+}
+
+
+
+
 $sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
 $stid = oci_parse($conn, $sql);
 oci_execute($stid);
@@ -20,12 +60,6 @@ while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
     $group_name = $row['GROUP_NAME'];
     
     $groups .= '<option value="'.$group_id.'">'.$group_name.'</option>';
-    
-    
-    //$groups .= '<tr><td><b><i>Group: '.$group_name.'</i></b></td><td>'
-    //        .'<input type=\'submit\' name=\'edit'.$group_id.'\' value=\'Edit\' />'
-    //        .'<input type=\'submit\' name=\'delete'.$group_id.'\' value=\'Delete\' />'
-    //        .'</tr>';
 }
 
 
@@ -48,6 +82,8 @@ oci_close($conn);
 </form>
     
 <h1><center>Groups</center></h1>
+
+<?php echo $message . "<br/>" ?>
 
 <form id='edit' action="edit_group.php" method='post'
     accept-charset='UTF-8'>
@@ -74,6 +110,26 @@ oci_close($conn);
     ?>
 
 </table>
+
+
+</form>
+
+<form id='add' action="<?php echo $php_self?>" method='post'
+    accept-charset='UTF-8'>
+
+    Create New Group
+<table>
+    <tr valign=top align=left>
+    <td>
+        <b><i>Group Name: </i></b></td>
+    <td>
+        <input type='text' name='group_name' value="" id='group_name' maxlength="24"/><br>
+    </td>
+    </tr>
+    
+    <tr valign=top align=left>
+    <td><input type="submit" name="addGroup" value="Create"></td>
+    </tr>
 
 
 </form>
