@@ -20,7 +20,7 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
     
     $conn=connect();
     
-    if (isset($_POST['submitSearch'])) {
+    if ($keywords != '') {
         $key_array = explode(' ', $keywords);
         
         $sql = 'SELECT r.photo_id, i.thumbnail, r.tot_score from ( SELECT photo_id, timing, SUM(score) as tot_score from ( SELECT photo_id, timing, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$key_array[0].'\', 1) > 0 OR CONTAINS (place, \''.$key_array[0].'\', 2) > 0 OR CONTAINS (description, \''.$key_array[0].'\', 3) > 0';
@@ -33,14 +33,14 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         
         $sql = $sql . ') GROUP BY photo_id, timing ) r JOIN images i ON i.photo_id = r.photo_id';
         
-        if (isset($_POST['after'])) {
-            $sql = $sql . ' WHERE r.timing > timing=TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
-            if (isset($_POST['before'])) {
-                $sql = $sql . ' and r.timing > timing=TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+        if ($after != '') {
+            $sql = $sql . ' WHERE r.timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            if ($before != '') {
+                $sql = $sql . ' and r.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
             }
         }
-        else if (isset($_POST['before'])) {
-            $sql = $sql . ' WHERE r.timing > timing=TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+        else if ($before != '') {
+            $sql = $sql . ' WHERE r.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }
         
         if ($searchType == 'newest') {
@@ -52,10 +52,32 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         else {
             $sql = $sql . ' ORDER BY r.tot_score DESC';
         }
-        
-        $stid = oci_parse($conn, $sql);
-        oci_execute($stid);
     }
+    else {
+        $sql = 'SELECT photo_id, thumbnail FROM images';
+        
+        if ($after != '') {
+            $sql = $sql . ' WHERE timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            if ($before != '') {
+                $sql = $sql . ' and timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            }
+        }
+        else if ($before != '') {
+            $sql = $sql . ' WHERE timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+        }  
+        
+        if ($searchType == 'newest') {
+            $sql = $sql . ' ORDER BY timing DESC';
+        }
+        else if ($searchType == 'oldest') {
+            $sql = $sql . ' ORDER BY timing';
+        }
+    }
+    
+    //$message = $sql;
+    
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
     
     $images = '<br><tr><td>Search Results: </td></tr>';
     while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
@@ -63,6 +85,9 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         $data = $row['THUMBNAIL']->load();
         $images .= '<tr><td><a href=display.php?photo_id=' . $id . '><img src="data:image/jpeg;base64,'.base64_encode( $data ).'"/></a></td></tr>';            
     }
+    
+    oci_free_statement($stid);
+    oci_close($conn);
 }
 else {
     $conn=connect();
@@ -77,6 +102,8 @@ else {
         $data = $row['THUMBNAIL']->load();
         $images .= '<tr><td><a href=display.php?photo_id=' . $id . '><img src="data:image/jpeg;base64,'.base64_encode( $data ).'"/></a></td></tr>';            
     }
+    
+    oci_close($conn);
 }
     
 ?>
@@ -101,7 +128,7 @@ else {
     ?>
     
 </p>
-
+<!--<p><?php echo $message ?></p>-->
 
 <form name="SearchForm" action="<?php echo $php_self?>" method="post" >
 <table
