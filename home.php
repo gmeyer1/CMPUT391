@@ -46,6 +46,12 @@
 
 </form>
 
+<form name="GroupsForm" action="groups.php" method="get" >
+
+<input type="submit" value="Groups">
+
+</form>
+
 <?php
 
 if($_SESSION['username'] == 'admin') {
