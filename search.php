@@ -7,6 +7,7 @@ session_start();
 if (!$_SESSION['username']) {
     redirect('login.php');
 }
+$user = $_SESSION['username'];
 
 if(!empty($_POST) && isset($_POST['submitSearch'])) {
     // The user submitted information
@@ -33,14 +34,13 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         
         $sql = $sql . ') GROUP BY photo_id, timing ) r JOIN images i ON i.photo_id = r.photo_id';
         
+        $sql = $sql . ' WHERE (i.owner_name = \''.$user.'\' or i.permitted = 1 or i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+        
         if ($after != '') {
-            $sql = $sql . ' WHERE r.timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
-            if ($before != '') {
-                $sql = $sql . ' and r.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
-            }
+            $sql = $sql . ' and r.timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
         }
         else if ($before != '') {
-            $sql = $sql . ' WHERE r.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and r.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }
         
         if ($searchType == 'newest') {
@@ -56,14 +56,13 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
     else {
         $sql = 'SELECT photo_id, thumbnail FROM images';
         
+        $sql = $sql . ' WHERE (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+        
         if ($after != '') {
-            $sql = $sql . ' WHERE timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
-            if ($before != '') {
-                $sql = $sql . ' and timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
-            }
+            $sql = $sql . ' and timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
         }
         else if ($before != '') {
-            $sql = $sql . ' WHERE timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }  
         
         if ($searchType == 'newest') {
@@ -74,7 +73,7 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         }
     }
     
-    //$message = $sql;
+    $message = $sql;
     
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
@@ -128,7 +127,7 @@ else {
     ?>
     
 </p>
-<!--<p><?php echo $message ?></p>-->
+<p><?php echo $message ?></p>
 
 <form name="SearchForm" action="<?php echo $php_self?>" method="post" >
 <table
