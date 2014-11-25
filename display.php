@@ -24,6 +24,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
     //Need to save new image values, and should probably check again that current user is owner
 
     $place = $_POST['place'];
+    $date = $_POST['date'];
     $description = $_POST['description'];
     $subject = $_POST['subject'];
     $group_name = $_POST['group_name'];
@@ -60,7 +61,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
         
     oci_free_statement($stid);  
 
-    $sql = 'UPDATE images SET subject=\'' . $subject . '\', permitted=\'' . $group_id . '\', place=\'' . $place . '\', description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
+    $sql = 'UPDATE images SET subject=\'' . $subject . '\', permitted=\'' . $group_id . '\', place=\'' . $place . '\', timing=\'' . $date . '\', description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     $row = oci_execute($stid, OCI_DEFAULT);  
     if($row) {
@@ -77,6 +78,12 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
         echo htmlentities($err['message']);
     }
     oci_free_statement($stid);
+    
+    $sql = 'BEGIN sync_index; END;';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+    oci_free_statement($stid);
+    
     oci_close($conn);
 }
 else if (!empty($_POST) && isset($_POST['submitDelete'])) {
@@ -118,13 +125,19 @@ else if (!empty($_POST) && isset($_POST['submitDelete'])) {
         echo htmlentities($err['message']);
     }
     oci_free_statement($stid);
+    
+    $sql = 'BEGIN sync_index; END;';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+    oci_free_statement($stid);
+    
     oci_close($conn);
 }
 else if (!empty($_GET) && isset($_GET['photo_id'])) {
 
     $photo_id = $_GET['photo_id'];
 
-    $sql = 'SELECT photo, subject, place, description, owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $sql = 'SELECT photo, subject, place, timing, description, owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
@@ -132,6 +145,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
         $data = $row['PHOTO']->load();
         $subject = $row['SUBJECT'];
         $place = $row['PLACE'];
+        $date = $row['TIMING'];
         $description = $row['DESCRIPTION'];
         $owner = $row['OWNER_NAME'];
         $permitted = $row['PERMITTED'];
@@ -228,6 +242,13 @@ oci_close($conn);
         <b><i>Place: </i></b></td>
     <td>
         <input type='text' name='place' value="<?php echo $place ?>" id='place' maxlength="128" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
+    </td>
+    </tr>
+    <tr valign=top align=left>
+    <td>
+        <b><i>Date: </i></b></td>
+    <td>
+        <input type='date' name='date' value="<?php echo $date ?>" id='date' <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
     </td>
     </tr>
     <tr valign=top align=left>

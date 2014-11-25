@@ -31,7 +31,17 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
             }
         }
         
-        $sql = $sql . ') GROUP BY photo_id, timing ) r JOIN images i ON i.photo_id = r.photo_id ORDER BY r.tot_score DESC';
+        $sql = $sql . ') GROUP BY photo_id, timing ) r JOIN images i ON i.photo_id = r.photo_id';
+        
+        if ($searchType == 'newest') {
+            $sql = $sql . ' ORDER BY r.timing DESC';
+        }
+        else if ($searchType == 'oldest') {
+            $sql = $sql . ' ORDER BY r.timing';
+        }
+        else {
+            $sql = $sql . ' ORDER BY r.tot_score DESC';
+        }
         
         $stid = oci_parse($conn, $sql);
         oci_execute($stid);

@@ -45,7 +45,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
         $subject = $_POST['subject'];
 	$place = $_POST['place'];
 	$description = $_POST['description'];
-        $date = date('d.M.y');
+        $date = $_POST['date'];//date('d.M.y');
         $group = $_POST['group_id'];
         
         if(is_uploaded_file($_FILES['userfile']['tmp_name']) && getimagesize($_FILES['userfile']['tmp_name']) != false)
@@ -94,7 +94,9 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                 
                 /*** our sql query ***/
                 // Need to assign a unique ID to every picture, and somehow let the uploader choose group for permission
-                $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
+                $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\',TO_DATE(\''.$date.'\', \'yyyy/mm/dd\'),\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
+                
+                $message = $sql;
                 
                 $stid = oci_parse($conn, $sql);
                 
@@ -122,6 +124,12 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 
                 // Free the statement identifier when closing the connection
                 oci_free_statement($stid);
+                
+                $sql = 'BEGIN sync_index; END;';
+                $stid = oci_parse($conn, $sql);
+                oci_execute($stid);
+                oci_free_statement($stid);
+                
                 oci_close($conn);
                 
                 $photo_blob->free();
@@ -141,7 +149,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
         
                  
         
-        $message = '<p>Thank you for submitting</p>';
+        //$message = '<p>Thank you for submitting</p>';
         }
     catch(Exception $e)
         {
@@ -222,6 +230,13 @@ function thumbnail($imgfile) {
 			<b><i>Place*: </i></b></td>
 		<td>
 			<input type='text' name='place' id='place' maxlength="128" /><br>
+		</td>
+	</tr>
+        <tr valign=top align=left>
+		<td>
+			<b><i>Date*: </i></b></td>
+		<td>
+			<input type='date' name='date' id='date'/><br>
 		</td>
 	</tr>
 	<tr valign=top align=left>

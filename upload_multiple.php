@@ -126,6 +126,12 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
 
                     // Free the statement identifier when closing the connection
                     oci_free_statement($stid);
+                    
+                    $sql = 'BEGIN sync_index; END;';
+                    $stid = oci_parse($conn, $sql);
+                    oci_execute($stid);
+                    oci_free_statement($stid);
+                    
                     oci_close($conn);
 
                     $photo_blob->free();
