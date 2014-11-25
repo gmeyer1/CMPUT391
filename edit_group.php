@@ -186,7 +186,7 @@ Edit Group
 
 
 <?php
-    echo ': ' . $group_name;
+    echo ': ' . $group_name . '<br/>Group owner: ' . $group_owner;
     
 ?>
 

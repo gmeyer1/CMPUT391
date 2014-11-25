@@ -59,8 +59,13 @@ if (isset($_POST['addGroup'])) {
 
 
 
+if ($user == 'admin') {
+    $sql = 'SELECT group_name, group_id FROM groups';
+}
+else {
+    $sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
+}
 
-$sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
 $stid = oci_parse($conn, $sql);
 oci_execute($stid);
 
