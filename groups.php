@@ -14,42 +14,58 @@ $conn=connect();
 if (isset($_POST['addGroup'])) {
     $group_name = $_POST['group_name'];
     $curr_id = 0;
-        
-    $sql = 'SELECT MAX(group_id) FROM groups';
+    
+    $sql = 'SELECT user_name FROM groups WHERE user_name = \'' . $user . '\' and group_name = \'' . $group_name . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
-     
-    $row = oci_fetch_array($stid);
-
-    if($row) {
-        $curr_id = $row['MAX(GROUP_ID)'];
+    $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+    if ($row) {
+        $message = "Group " . $group_name . " already exists";
+        $valid = false;
     }
-
-    $curr_id++;
+    else {
     
-    oci_free_statement($stid);
-    
-    $date = date('d.M.y');
-    $sql = 'INSERT INTO groups VALUES (\''.$curr_id.'\',\''.$user.'\',\''.$group_name.'\',\''.$date.'\')'; 
+        $sql = 'SELECT MAX(group_id) FROM groups';
+        $stid = oci_parse($conn, $sql);
+        oci_execute($stid);
 
-    $stid = oci_parse($conn, $sql);
-    $res=oci_execute($stid);
+        $row = oci_fetch_array($stid);
 
-    if (!$res) {
-        $err = oci_error($stid); 
-        $message .= htmlentities($err['message']);
-        $message .= "<br/>Could not create group " . $group_name;
+        if($row) {
+            $curr_id = $row['MAX(GROUP_ID)'];
+        }
+
+        $curr_id++;
+
+        oci_free_statement($stid);
+
+        $date = date('d.M.y');
+        $sql = 'INSERT INTO groups VALUES (\''.$curr_id.'\',\''.$user.'\',\''.$group_name.'\',\''.$date.'\')'; 
+
+        $stid = oci_parse($conn, $sql);
+        $res=oci_execute($stid);
+
+        if (!$res) {
+            $err = oci_error($stid); 
+            $message .= htmlentities($err['message']);
+            $message .= "<br/>Could not create group " . $group_name;
+        }
+        else{ 
+            $message = 'Created group ' . $group_name;
+        }
+        oci_free_statement($stid);
     }
-    else{ 
-        $message = 'Created group ' . $group_name;
-    }
-    oci_free_statement($stid);
 }
 
 
 
+if ($user == 'admin') {
+    $sql = 'SELECT group_name, group_id FROM groups';
+}
+else {
+    $sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
+}
 
-$sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
 $stid = oci_parse($conn, $sql);
 oci_execute($stid);
 
