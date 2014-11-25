@@ -46,6 +46,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
 	$place = $_POST['place'];
 	$description = $_POST['description'];
         $date = $_POST['date'];//date('d.M.y');
+        $date = str_replace('-', '/', $date);
         $group = $_POST['group_id'];
         
         if(is_uploaded_file($_FILES['userfile']['tmp_name']) && getimagesize($_FILES['userfile']['tmp_name']) != false)
@@ -238,8 +239,8 @@ function thumbnail($imgfile) {
 		<td>
 			<b><i>Date*: </i></b></td>
 		<td>
-                        <!-- CHECK TO SEE IF THIS CAN BE CHANGED TO INPUT TYPE = DATE IN CHROME -->
-			<input type='text' name='date' id='date' maxlength="12" /><br>
+                        <!-- CHECK TO SEE IF THIS CAN BE CHANGED TO INPUT TYPE = DATE IN CHROME maxlength="12" -->
+			<input type='date' name='date' id='date'/><br>
 		</td>
 	</tr>
 	<tr valign=top align=left>

@@ -13,7 +13,9 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
     // The user submitted information
     $keywords = $_POST['keywords'];
     $after = $_POST['after'];
+    $after = str_replace('-', '/', $after);
     $before = $_POST['before'];
+    $before = str_replace('-', '/', $before);
     $searchType = $_POST['searchType'];
 
     //$message = "keywords: " . $keywords . ", after: " . $after . ", before: " . $before;
@@ -142,7 +144,7 @@ else {
 
 <tr valign=top align=left>
 <td><b><i>Keywords:</i></b></td>
-<td><input type="text" name="keywords" value="keywords..." autofocus ><br></td>
+<td><input type="text" name="keywords" value="" autofocus ><br></td>
 </tr>
 
 <tr valign=top align=left>

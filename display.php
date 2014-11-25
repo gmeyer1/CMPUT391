@@ -137,7 +137,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
 
     $photo_id = $_GET['photo_id'];
 
-    $sql = 'SELECT photo, subject, place, TO_CHAR(timing, \'yyyy/mm/dd\') "DATE", description, owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $sql = 'SELECT photo, subject, place, TO_CHAR(timing, \'yyyy-mm-dd\') "DATE", description, owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
@@ -248,8 +248,8 @@ oci_close($conn);
     <td>
         <b><i>Date: </i></b></td>
     <td>
-        <!-- CHECK TO SEE IF THIS CAN BE CHANGED TO INPUT TYPE = DATE IN CHROME -->
-        <input type='text' name='date' value="<?php echo $date ?>" id='date' maxlength="12" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
+        <!-- CHECK TO SEE IF THIS CAN BE CHANGED TO INPUT TYPE = DATE IN CHROME maxlength="12" -->
+        <input type='date' name='date' value="<?php echo $date ?>" id='date' <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
     </td>
     </tr>
     <tr valign=top align=left>
