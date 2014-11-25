@@ -61,7 +61,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
         
     oci_free_statement($stid);  
 
-    $sql = 'UPDATE images SET subject=\'' . $subject . '\', permitted=\'' . $group_id . '\', place=\'' . $place . '\', timing=\'' . $date . '\', description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
+    $sql = 'UPDATE images SET subject=\'' . $subject . '\', permitted=\'' . $group_id . '\', place=\'' . $place . '\',timing=TO_DATE(\''.$date.'\', \'yyyy/mm/dd\'), description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     $row = oci_execute($stid, OCI_DEFAULT);  
     if($row) {
@@ -137,7 +137,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
 
     $photo_id = $_GET['photo_id'];
 
-    $sql = 'SELECT photo, subject, place, timing, description, owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $sql = 'SELECT photo, subject, place, TO_CHAR(timing, \'yyyy/mm/dd\') "DATE", description, owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
@@ -145,7 +145,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
         $data = $row['PHOTO']->load();
         $subject = $row['SUBJECT'];
         $place = $row['PLACE'];
-        $date = $row['TIMING'];
+        $date = $row['DATE'];
         $description = $row['DESCRIPTION'];
         $owner = $row['OWNER_NAME'];
         $permitted = $row['PERMITTED'];
@@ -248,7 +248,8 @@ oci_close($conn);
     <td>
         <b><i>Date: </i></b></td>
     <td>
-        <input type='date' name='date' value="<?php echo $date ?>" id='date' <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
+        <!-- CHECK TO SEE IF THIS CAN BE CHANGED TO INPUT TYPE = DATE IN CHROME -->
+        <input type='text' name='date' value="<?php echo $date ?>" id='date' maxlength="12" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
     </td>
     </tr>
     <tr valign=top align=left>

@@ -33,6 +33,16 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         
         $sql = $sql . ') GROUP BY photo_id, timing ) r JOIN images i ON i.photo_id = r.photo_id';
         
+        if (isset($_POST['after'])) {
+            $sql = $sql . ' WHERE r.timing > timing=TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            if (isset($_POST['before'])) {
+                $sql = $sql . ' and r.timing > timing=TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            }
+        }
+        else if (isset($_POST['before'])) {
+            $sql = $sql . ' WHERE r.timing > timing=TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+        }
+        
         if ($searchType == 'newest') {
             $sql = $sql . ' ORDER BY r.timing DESC';
         }

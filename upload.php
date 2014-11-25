@@ -236,7 +236,8 @@ function thumbnail($imgfile) {
 		<td>
 			<b><i>Date*: </i></b></td>
 		<td>
-			<input type='date' name='date' id='date'/><br>
+                        <!-- CHECK TO SEE IF THIS CAN BE CHANGED TO INPUT TYPE = DATE IN CHROME -->
+			<input type='text' name='date' id='date' maxlength="12" /><br>
 		</td>
 	</tr>
 	<tr valign=top align=left>
