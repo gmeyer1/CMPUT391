@@ -14,6 +14,24 @@ $message = 'Select an image for upload';
 $registered = true;
 $php_self = $_SERVER['PHP_SELF'];
 
+$conn=connect();
+
+$sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
+$stid = oci_parse($conn, $sql);
+oci_execute($stid);
+
+
+$groups = '<option value="2">Private</option><option value="1">Public</option>';
+while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+    $group_id = $row['GROUP_ID'];
+    $group_name = $row['GROUP_NAME'];
+    
+    $groups .= '<option value="'.$group_id.'">'.$group_name.'</option>';
+}
+
+oci_free_statement($stid);
+oci_close($conn);
+
 define('MAX_THUMBNAIL_DIMENSION', 100);
 
 date_default_timezone_set('America/Denver');
@@ -32,6 +50,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
             $place = $_POST['place'];
             $description = $_POST['description'];
             $date = date('d.M.y');
+            $group = $_POST['group_id'];
 
             if(is_uploaded_file($_FILES['userfiles']['tmp_name'][$i]) && getimagesize($_FILES['userfiles']['tmp_name'][$i]) != false)
                 {
@@ -79,7 +98,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
 
                     /*** our sql query ***/
                     // Need to assign a unique ID to every picture, and somehow let the uploader choose group for permission
-                    $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',1,\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
+                    $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
 
                     $stid = oci_parse($conn, $sql);
 
@@ -215,6 +234,19 @@ function thumbnail($imgfile) {
 			<b><i>Description*: </i></b></td>
 		<td>
 			<input type='text' name='description' id='description' maxlength="2048" /><br>
+		</td>
+	</tr>
+        <tr valign=top align=left>
+		<td>
+			<b><i>Permission*: </i></b></td>
+		<td>
+                    <select name="group_id">
+                        <?php
+                        echo $groups;
+                        
+                        ?>
+                    </select>
+                    <br>
 		</td>
 	</tr>
 	</table>

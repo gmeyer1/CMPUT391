@@ -43,7 +43,7 @@ if (isset($_POST['addGroup'])) {
     else{ 
         $message = 'Created group ' . $group_name;
     }
-    
+    oci_free_statement($stid);
 }
 
 
@@ -54,13 +54,15 @@ $stid = oci_parse($conn, $sql);
 oci_execute($stid);
 
 
-$groups = "";
+$groups = '';
 while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
     $group_id = $row['GROUP_ID'];
     $group_name = $row['GROUP_NAME'];
     
     $groups .= '<option value="'.$group_id.'">'.$group_name.'</option>';
 }
+
+oci_free_statement($stid);
 
 
 oci_close($conn);
@@ -92,7 +94,7 @@ oci_close($conn);
     
     <?php
     if ($groups) {
-        echo '<p>Groups:</p>';
+        echo 'Groups:';
         echo '<select name="group_id">';
         echo $groups;
         echo '</select>';

@@ -18,6 +18,7 @@ $deleted = 0;
 $updated = 0;
 $photo_group = -1;
 $conn=connect();
+$group_name = "public";
 
 if (!empty($_POST) && isset($_POST['submitEdit'])) {
     //Need to save new image values, and should probably check again that current user is owner
@@ -25,6 +26,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
     $place = $_POST['place'];
     $description = $_POST['description'];
     $subject = $_POST['subject'];
+    $group_name = $_POST['group_name'];
     
     $photo_id = $_POST['photo_id'];
     
@@ -43,9 +45,22 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
         redirect('search.php');
     }
         
-    oci_free_statement($stid);    
+    oci_free_statement($stid);
+    
+    $sql = 'SELECT group_id FROM groups WHERE group_name = \'' . $group_name . '\' and user_name = \'' . $user . '\'';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+    $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+    if ($row) {
+        $group_id = $row['GROUP_ID'];
+    }
+    else {
+        $group_id = '2';
+    }
+        
+    oci_free_statement($stid);  
 
-    $sql = 'UPDATE images SET subject=\'' . $subject . '\', place=\'' . $place . '\', description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
+    $sql = 'UPDATE images SET subject=\'' . $subject . '\', permitted=\'' . $group_id . '\', place=\'' . $place . '\', description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     $row = oci_execute($stid, OCI_DEFAULT);  
     if($row) {
@@ -128,6 +143,15 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
     
     oci_free_statement($stid);
     
+    $sql = 'SELECT group_name FROM groups WHERE group_id = \'' . $permitted . '\'';
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+    $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+    if ($row) {
+        $group_name = $row['GROUP_NAME'];
+    }
+        
+    oci_free_statement($stid);  
 }
 
 if ($permitted == -1) {
@@ -211,6 +235,13 @@ oci_close($conn);
         <b><i>Description: </i></b></td>
     <td>
         <input type='text' name='description' value="<?php echo $description  ?>" id='description' maxlength="2048" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
+    </td>
+    </tr>
+    <tr valign=top align=left>
+    <td>
+        <b><i>Group: </i></b></td>
+    <td>
+        <input type='text' name='group_name' value="<?php echo $group_name  ?>" id='group' maxlength="24" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
     </td>
     </tr>
     </table>
