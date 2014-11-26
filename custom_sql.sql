@@ -40,3 +40,6 @@ FROM images
 WHERE photo_id not in
 (SELECT DISTINCT photo_id FROM popular_images)
 ) ORDER BY total desc;
+
+INSERT INTO users VALUES ('admin', 'password', sysdate);
+        
