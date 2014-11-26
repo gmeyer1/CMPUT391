@@ -49,10 +49,10 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         $sql = $sql . ' and (owner_name = \''.$user.'\' or \''.$user.'\' = \'admin\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\') or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = permitted))';
         
         if ($after != '') {
-            $sql = $sql . ' and timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and timing >= TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
         }
         else if ($before != '') {
-            $sql = $sql . ' and timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and timing <= TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }
         
         if ($searchType == 'newest') {
@@ -72,10 +72,10 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         $sql = $sql . ' WHERE (owner_name = \''.$user.'\' or \''.$user.'\' = \'admin\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\') or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = permitted))';
         
         if ($after != '') {
-            $sql = $sql . ' and timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and timing >= TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
         }
         else if ($before != '') {
-            $sql = $sql . ' and timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and timing <= TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }  
         
         if ($searchType == 'newest') {
@@ -174,12 +174,12 @@ else {
 </tr>
 
 <tr valign=top align=left>
-<td><b><i>After Date:</i></b></td>
+<td><b><i>Start Date:</i></b></td>
 <td><input type="date" name="after"><br></td>
 </tr>
 
 <tr valign=top align=left>
-<td><b><i>Before Date:</i></b></td>
+<td><b><i>End Date:</i></b></td>
 <td><input type="date" name="before"><br></td>
 </tr>
 
