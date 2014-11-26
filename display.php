@@ -160,7 +160,9 @@ if ($permitted == -1) {
 }
 else if ($owner != $user && $user != 'admin' && $permitted != 1) {
     
-    $sql = 'select group_id from group_lists where friend_id=\'' . $user . '\'';
+    $sql = 'SELECT g.group_id FROM groups g, group_lists l WHERE g.group_id = l.group_id and (g.user_name=\'' . $user . '\' or l.friend_id=\'' . $user . '\')';
+
+    //$sql = 'select group_id from group_lists where friend_id=\'' . $user . '\'';
 
     $stid = oci_parse($conn, $sql);
     oci_execute($stid, OCI_DEFAULT);
@@ -176,13 +178,15 @@ else if ($owner != $user && $user != 'admin' && $permitted != 1) {
     }
 }
 
-$groups = '<option value="2">private</option><option value="1">public</option>';
+
 if ($user == $owner || $user == 'admin') {
     if ($user == 'admin') {
-        $sql = 'SELECT group_name, group_id FROM groups';
+        $groups = '';
+        $sql = 'SELECT g.group_id, g.group_name, g.user_name FROM groups g';
     }
     else {
-        $sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
+        $groups = '<option value="2">private</option><option value="1">public</option>';
+        $sql = 'SELECT g.group_id, g.group_name, g.user_name FROM groups g left outer join group_lists l on g.group_id=l.group_id WHERE g.user_name=\'' . $user . '\' or l.friend_id=\'' . $user . '\'';
     }
 
     $stid = oci_parse($conn, $sql);
@@ -191,8 +195,9 @@ if ($user == $owner || $user == 'admin') {
     while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
         $group_id = $row['GROUP_ID'];
         $group_name = $row['GROUP_NAME'];
+        $group_owner = $row['USER_NAME'];
 
-        $groups .= '<option value="'.$group_id.'">'.$group_name.'</option>';
+        $groups .= '<option value="'.$group_id.'">'.$group_name.' - ' . $group_owner .'</option>';
     }
     oci_free_statement($stid);
     

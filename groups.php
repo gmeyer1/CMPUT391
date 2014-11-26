@@ -81,6 +81,27 @@ while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
 oci_free_statement($stid);
 
 
+
+$sql = 'SELECT g.group_id, g.group_name, g.user_name, l.notice FROM groups g left outer join group_lists l on g.group_id=l.group_id WHERE l.friend_id=\'' . $user . '\'';
+    
+
+$stid = oci_parse($conn, $sql);
+oci_execute($stid);
+
+
+$member_of = '';
+while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+    $group_id = $row['GROUP_ID'];
+    $group_name = $row['GROUP_NAME'];
+    $group_owner = $row['USER_NAME'];
+    $notice = $row['NOTICE'];
+    
+    $member_of .= '<tr><td><b><i>' . $group_name . '</i></b></td><td><b><i>' . $group_owner . '</i></b></td><td><b><i>' . $notice . '</i></b></td></tr>';
+}
+
+oci_free_statement($stid);
+
+
 oci_close($conn);
     
 ?>
@@ -110,7 +131,7 @@ oci_close($conn);
     
     <?php
     if ($groups) {
-        echo 'Groups:';
+        echo 'Owner of Groups:';
         echo '<select name="group_id">';
         echo $groups;
         echo '</select>';
@@ -123,10 +144,10 @@ oci_close($conn);
     <?php
     }
     else {
-        echo '<p>No groups</p>';
+        echo '<p>Owner of no groups</p>';
     }
     ?>
-
+    
 </table>
 
 
@@ -135,22 +156,37 @@ oci_close($conn);
 <form id='add' action="<?php echo $php_self?>" method='post'
     accept-charset='UTF-8'>
 
-    Create New Group
-<table>
+<table border="1">
+    <caption>Create New Group</caption>
     <tr valign=top align=left>
     <td>
         <b><i>Group Name: </i></b></td>
     <td>
         <input type='text' name='group_name' value="" id='group_name' maxlength="24"/><br>
     </td>
-    </tr>
-    
-    <tr valign=top align=left>
     <td><input type="submit" name="addGroup" value="Create"></td>
     </tr>
 
 
 </form>
+
+
+<?php
+
+
+if ($member_of) {
+    
+    echo '<table border="1">';
+    echo '<caption>Member of Groups:</caption>';
+    echo '<tr><td><b><i>Group Name</i></b></td><td><b><i>Group Owner</i></b></td><td><b><i>Notice</i></b></td></tr>';
+    echo $member_of;
+    echo '</table>';
+}
+else {
+    echo '<b><i>Member of no groups</i></b>';
+}
+?>
+
 
 
 </body>
