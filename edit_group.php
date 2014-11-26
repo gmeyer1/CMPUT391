@@ -16,8 +16,9 @@ $group_name = "";
 $group_owner = "";
 $users = "";
 $message = "";
-$deleted = 0;
-$deleted_users = 0;
+$deleted = false;
+$deleted_users = false;
+$updated_images = false;
 
 $conn=connect();
 
@@ -38,35 +39,57 @@ else {
 oci_free_statement($stid);
 
 if (isset($_POST['deleteGroup'])) {
-    echo 'About to delete group ' . $group_name;
-    $sql = 'DELETE FROM group_lists WHERE group_id = \'' . $group_id . '\'';
+    
+    $sql = 'UPDATE images SET permitted=\'2\' WHERE permitted=\'' . $group_id . '\'';
     $stid = oci_parse($conn, $sql);
     $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
     if($row) {
-        $deleted_users = 1;
+        $updated_images = true;
     }
     else {
-        $message .= "Could not remove users from group " . $group_name . "<br/>";
+        $message .= "Could not update group permissions on images<br/>";
     }
     
     oci_free_statement($stid);
     
-    $sql = 'DELETE FROM groups WHERE group_id = \'' . $group_id . '\'';
-    $stid = oci_parse($conn, $sql);
-    $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
-    if($row) {
-        if (oci_commit($conn)) {
-            $deleted = 1;
+    
+    if ($updated_images) {
+        $sql = 'DELETE FROM group_lists WHERE group_id = \'' . $group_id . '\'';
+        $stid = oci_parse($conn, $sql);
+        $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
+        if($row) {
+            $deleted_users = 1;
         }
         else {
-            $message .= "Could not commit to delete group " . $group_name;
-        }  
-    }
-    else {
-        $message .= "Could not delete group " . $group_name;
+            $message .= "Could not remove users from group " . $group_name . "<br/>";
+        }
+
+        oci_free_statement($stid);
+    
     }
     
-    oci_free_statement($stid);
+    if ($deleted_users) {
+        $sql = 'DELETE FROM groups WHERE group_id = \'' . $group_id . '\'';
+        $stid = oci_parse($conn, $sql);
+        $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
+        if($row) {
+            if (oci_commit($conn)) {
+                $deleted = 1;
+            }
+            else {
+                $message .= "Could not commit to delete group " . $group_name;
+            }  
+        }
+        else {
+            $message .= "Could not delete group " . $group_name;
+        }
+
+        oci_free_statement($stid);
+    }
+    
+    if (!$deleted) {
+        oci_rollback($conn);
+    }
 }
 else if (isset($_POST['addUser'])) {
     $user_name = $_POST['user_name'];
