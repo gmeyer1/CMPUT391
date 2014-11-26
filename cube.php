@@ -19,10 +19,10 @@ if(isset($_POST['submitData'])) {
     $key_array = explode(' ', $keywords);
     $users = $_POST['users'];
     $user_array = explode(' ', $users);
-    $after = $_POST['after'];
-    $after = str_replace('-', '/', $after);
-    $before = $_POST['before'];
-    $before = str_replace('-', '/', $before);
+    $start = $_POST['start'];
+    $start = str_replace('-', '/', $start);
+    $end = $_POST['end'];
+    $end = str_replace('-', '/', $end);
     $showYear = $_POST['showYear'];
     $showMonth = $_POST['showMonth'];
     $showWeek = $_POST['showWeek'];
@@ -144,23 +144,23 @@ if(isset($_POST['submitData'])) {
         }
     }
     
-    if ($after != '') {
+    if ($start != '') {
         if ($check == 0) {
-            $sql .= ' WHERE timing < TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            $sql .= ' WHERE timing > TO_DATE(\''.$start.'\', \'yyyy/mm/dd\')';
             $check = 1;
         }
         else {
-            $sql .= ' AND timing < TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            $sql .= ' AND timing > TO_DATE(\''.$start.'\', \'yyyy/mm/dd\')';
         }
     }
     
-    if ($before != '') {
+    if ($end != '') {
         if ($check == 0) {
-            $sql .= ' WHERE timing > TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $sql .= ' WHERE timing < TO_DATE(\''.$end.'\', \'yyyy/mm/dd\')';
             $check = 1;
         }
         else {
-            $sql .= ' AND timing > TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $sql .= ' AND timing < TO_DATE(\''.$end.'\', \'yyyy/mm/dd\')';
         }
     }
     
@@ -281,12 +281,12 @@ if(isset($_POST['submitData'])) {
 
 <tr valign=top align=left>
 <td><b><i>Start Date:</i></b></td>
-<td><input type="date" name="before"><br></td>
+<td><input type="date" name="start"><br></td>
 </tr>
 
 <tr valign=top align=left>
 <td><b><i>End Date:</i></b></td>
-<td><input type="date" name="after"><br></td>
+<td><input type="date" name="end"><br></td>
 </tr>
 
 <tr valign=top align=left>
