@@ -104,7 +104,7 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
 }
 else {
     $conn=connect();
-    $sql = 'SELECT thumbnail, photo_id FROM images';
+    $sql = 'SELECT thumbnail, photo_id FROM images WHERE (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     
