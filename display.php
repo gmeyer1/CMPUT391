@@ -18,7 +18,8 @@ $deleted = 0;
 $updated = 0;
 $photo_group = -1;
 $conn=connect();
-$group_name = "public";
+$image_group_name = "public";
+$group_name = "";
 
 if (!empty($_POST) && isset($_POST['submitEdit'])) {
     //Need to save new image values, and should probably check again that current user is owner
@@ -149,7 +150,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
     if ($row) {
-        $group_name = $row['GROUP_NAME'];
+        $image_group_name = $row['GROUP_NAME'];
     }
         
     oci_free_statement($stid);  
@@ -160,7 +161,7 @@ if ($permitted == -1) {
 }
 else if ($owner != $user && $user != 'admin' && $permitted != 1) {
     
-    $sql = 'SELECT g.group_id FROM groups g, group_lists l WHERE g.group_id = l.group_id and (g.user_name=\'' . $user . '\' or l.friend_id=\'' . $user . '\')';
+    $sql = 'SELECT g.group_id, g.group_name, g.user_name FROM groups g left outer join group_lists l on g.group_id=l.group_id WHERE g.group_id = l.group_id and (g.user_name=\'' . $user . '\' or l.friend_id=\'' . $user . '\')';
 
     //$sql = 'select group_id from group_lists where friend_id=\'' . $user . '\'';
 
@@ -277,7 +278,7 @@ oci_close($conn);
     
         <?php
         echo '<tr><td><b><i>Owner: </i></b></td><td><b><i>' . $owner . '</i></b></td></tr>';
-        echo '<tr><td><b><i>Group: </i></b></td><td><b><i>' . $group_name . '</i></b></td><td></tr>';
+        echo '<tr><td><b><i>Group: </i></b></td><td><b><i>' . $image_group_name . '</i></b></td><td></tr>';
         if ($user == $owner || $user == 'admin') {
             echo '<tr><td><b><i>Update group:</i></b></td><td>';
             echo '<select name="group_id">';
