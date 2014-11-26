@@ -9,7 +9,7 @@ if (!$_SESSION['username']) {
 }
 $user = $_SESSION['username'];
 
-if(!empty($_POST) && isset($_POST['submitSearch'])) {
+if(!empty($_POST) && isset($_POST['submitData'])) {
     // The user submitted information
     $keywords = $_POST['keywords'];
     $key_array = explode(' ', $keywords);
@@ -97,17 +97,17 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
     }
     
     if ($keywords != '') {
-        $contains = $key_array[0];
+        $contains = '%'.$key_array[0].'%';
         
         foreach ($key_array as $key) {
             if ($key_array[0] != $key) {
-                $contains = $contains.' | '.$key;
+                $contains = $contains.' | %'.$key.'%';
             }
         }
         
         if ($check == 0) {
             $sql .= ' WHERE CONTAINS (subject, \''.$contains.'\', 1) > 0';
-            $check = 0;
+            $check = 1;
         }
         else {
             $sql .= ' AND CONTAINS (subject, \''.$contains.'\', 1) > 0';
@@ -116,11 +116,11 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
     
     if ($after != '' && $before != '') {
         if ($check == 0) {
-            $sql .= ' WHERE timing BETWEEN TO_DATE(\''.before.'\', \'yyyy/mm/dd\') AND TO_DATE(\''.after.'\', \'yyyy/mm/dd\')';
+            $sql .= ' WHERE timing BETWEEN TO_DATE(\''.$before.'\', \'yyyy/mm/dd\') AND TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
             $check = 1;
         }
         else {
-            $sql .= ' AND timing BETWEEN TO_DATE(\''.before.'\', \'yyyy/mm/dd\') AND TO_DATE(\''.after.'\', \'yyyy/mm/dd\')';
+            $sql .= ' AND timing BETWEEN TO_DATE(\''.$before.'\', \'yyyy/mm/dd\') AND TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
         }
     }
     
@@ -145,31 +145,31 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
     
     if ($showYear) {
         if ($check == 0) {
-            $sql .= ' GROUP BY year';
+            $sql .= ' GROUP BY EXTRACT(YEAR FROM timing)';
             $check = 1;
         }
         else {
-            $sql .= ', year';
+            $sql .= ', EXTRACT(YEAR FROM timing)';
         }
     }
     
     if ($showMonth) {
         if ($check == 0) {
-            $sql .= ' GROUP BY month';
+            $sql .= ' GROUP BY EXTRACT(MONTH FROM timing)';
             $check = 1;
         }
         else {
-            $sql .= ', month';
+            $sql .= ', EXTRACT(MONTH FROM timing)';
         }
     }
     
     if ($showWeek) {
         if ($check == 0) {
-            $sql .= ' GROUP BY week';
+            $sql .= ' GROUP BY TO_CHAR(timing,\'WW\')';
             $check = 1;
         }
         else {
-            $sql .= ', week';
+            $sql .= ', TO_CHAR(timing,\'WW\')';
         }
     }
     
@@ -182,3 +182,71 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
 }
 
 ?>
+
+<html>
+<head>
+<title>Data Analysis</title>
+</head>
+
+<body>
+<form name="HomeForm" action="home.php" method="get" >
+
+<input type="submit" value="Home">
+
+</form>
+<h1><center>Data Analysis</center></h1>
+
+<p><?php echo $message ?></p>
+
+<form name="DataForm" action="<?php echo $php_self?>" method="post" >
+<table
+    
+<tr valign=top align=left>
+<td><b><i>Display Fields:</i></b></td>
+<td>
+<input type="radio" name="showUsers" value="users">Users<br>
+<input type="radio" name="showSubjects" value="subjects">Subjects<br>
+<input type="radio" name="showYear" value="year">Year<br>
+<input type="radio" name="showMonth" value="month">Month<br>
+<input type="radio" name="showWeek" value="week">Week<br>
+</td>
+</tr>
+
+<tr valign=top align=left>
+<td><b><i>Users:</i></b></td>
+<td><input type="text" name="keywords" value="" autofocus ><br></td>
+</tr>
+
+<tr valign=top align=left>
+<td><b><i>Keywords:</i></b></td>
+<td><input type="text" name="keywords" value="" autofocus ><br></td>
+</tr>
+
+<tr valign=top align=left>
+<td><b><i>Start Date:</i></b></td>
+<td><input type="date" name="before"><br></td>
+</tr>
+
+<tr valign=top align=left>
+<td><b><i>End Date:</i></b></td>
+<td><input type="date" name="after"><br></td>
+</tr>
+
+<tr valign=top align=left>
+    <td><input type="submit" name="submitData" value="Submit"></td>
+</tr>
+</table>
+
+
+
+
+<?php
+
+echo '<p>';
+echo $sql;
+echo '</p>';
+
+?>
+
+</table>
+</form>

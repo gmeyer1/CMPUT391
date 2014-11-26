@@ -29,11 +29,11 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         // If there are keywords
         $key_array = explode(' ', $keywords);
         
-        $contains = $key_array[0];
+        $contains = '%'.$key_array[0].'%';
         
         foreach ($key_array as $key) {
             if ($key_array[0] != $key) {
-                $contains = $contains . ' | ' . $key;
+                $contains = $contains.' | %'.$key.'%';
             }
         }
         
