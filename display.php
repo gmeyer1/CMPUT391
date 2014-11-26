@@ -27,7 +27,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
     $date = $_POST['date'];
     $description = $_POST['description'];
     $subject = $_POST['subject'];
-    $group_name = $_POST['group_name'];
+    $group_id = $_POST['group_id'];
     
     $photo_id = $_POST['photo_id'];
     
@@ -46,20 +46,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
         redirect('search.php');
     }
         
-    oci_free_statement($stid);
-    
-    $sql = 'SELECT group_id FROM groups WHERE group_name = \'' . $group_name . '\' and user_name = \'' . $user . '\'';
-    $stid = oci_parse($conn, $sql);
-    oci_execute($stid);
-    $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
-    if ($row) {
-        $group_id = $row['GROUP_ID'];
-    }
-    else {
-        $group_id = '2';
-    }
-        
-    oci_free_statement($stid);  
+    oci_free_statement($stid); 
 
     $sql = 'UPDATE images SET subject=\'' . $subject . '\', permitted=\'' . $group_id . '\', place=\'' . $place . '\',timing=TO_DATE(\''.$date.'\', \'yyyy/mm/dd\'), description=\'' . $description . '\' WHERE photo_id=\'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
@@ -189,6 +176,28 @@ else if ($owner != $user && $user != 'admin' && $permitted != 1) {
     }
 }
 
+$groups = '<option value="2">private</option><option value="1">public</option>';
+if ($user == $owner || $user == 'admin') {
+    if ($user == 'admin') {
+        $sql = 'SELECT group_name, group_id FROM groups';
+    }
+    else {
+        $sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
+    }
+
+    $stid = oci_parse($conn, $sql);
+    oci_execute($stid);
+
+    while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+        $group_id = $row['GROUP_ID'];
+        $group_name = $row['GROUP_NAME'];
+
+        $groups .= '<option value="'.$group_id.'">'.$group_name.'</option>';
+    }
+    oci_free_statement($stid);
+    
+}
+
 oci_close($conn);
     
 ?>
@@ -260,11 +269,17 @@ oci_close($conn);
     </td>
     </tr>
     <tr valign=top align=left>
-    <td>
-        <b><i>Group: </i></b></td>
-    <td>
-        <input type='text' name='group_name' value="<?php echo $group_name  ?>" id='group' maxlength="24" <?php if ($user != $owner && $user != 'admin') { echo 'readonly'; } ?>/><br>
-    </td>
+    
+        <?php
+        echo '<tr><td><b><i>Owner: </i></b></td><td><b><i>' . $owner . '</i></b></td></tr>';
+        echo '<tr><td><b><i>Group: </i></b></td><td><b><i>' . $group_name . '</i></b></td><td></tr>';
+        if ($user == $owner || $user == 'admin') {
+            echo '<tr><td><b><i>Update group:</i></b></td><td>';
+            echo '<select name="group_id">';
+            echo $groups;
+            echo '</select></td></tr>';
+        }
+    ?>
     </tr>
     </table>
 
