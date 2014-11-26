@@ -8,11 +8,11 @@ if (!$_SESSION['username']) {
     redirect('login.php');
 }
 $user = $_SESSION['username'];
+// Make sure only the admin can reach the page
 if ($user != 'admin') {
     redirect('home.php');
 }
 
-//if(!empty($_POST) && isset($_POST['submitData'])) {
 if(isset($_POST['submitData'])) {
     // The user submitted information
     $keywords = $_POST['keywords'];
@@ -29,6 +29,8 @@ if(isset($_POST['submitData'])) {
     $showUsers = $_POST['showUsers'];
     $showSubjects = $_POST['showSubjects'];
     
+    // Generate the select clause based on what the user wants to see
+    // Also generate headers for resulting table
     $sql = 'SELECT';
     
     $check = 0;
@@ -58,6 +60,7 @@ if(isset($_POST['submitData'])) {
     
     if ($showYear) {
         if ($check == 0) {
+            // Extract year from date
             $sql .= ' EXTRACT(YEAR FROM timing) year';
             $check = 1;
             
@@ -72,6 +75,7 @@ if(isset($_POST['submitData'])) {
     
     if ($showMonth) {
         if ($check == 0) {
+            // Extract month from date
             $sql .= ' EXTRACT(MONTH FROM timing) month';
             $check = 1;
             
@@ -86,6 +90,7 @@ if(isset($_POST['submitData'])) {
     
     if ($showWeek) {
         if ($check == 0) {
+            // Extract week of the year from date
             $sql .= ' TO_CHAR(timing,\'WW\') week';
             $check = 1;
             
@@ -111,9 +116,11 @@ if(isset($_POST['submitData'])) {
     
     $columns .= '</b></td></tr>';
     
+    // Generate the where clause based on any filters the user specified
     $check = 0;
     
     if ($users != '') {
+        // Generate select in statement and allow for multiple users
         $contains = '\''.$user_array[0].'\'';
         
         foreach ($user_array as $owner) {
@@ -127,6 +134,7 @@ if(isset($_POST['submitData'])) {
     }
     
     if ($keywords != '') {
+        // Generate contains statement and allow for multiple keywords
         $contains = '%'.$key_array[0].'%';
         
         foreach ($key_array as $key) {
@@ -164,8 +172,7 @@ if(isset($_POST['submitData'])) {
         }
     }
     
-    //SHOULD WE ADD ORDER BY? IF SO, ADD HERE
-    
+    // Generate the group by clause based on what the user wants to see
     $check = 0;
     
     if ($showUsers) {
@@ -213,13 +220,16 @@ if(isset($_POST['submitData'])) {
         }
     }
     
+    // Order by image count descending
     $sql .= ' ORDER BY count DESC';
     
+    // Execute data cube query
     $conn=connect();
         
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     
+    // Generate table from result set to be displayed
     while ($row = oci_fetch_array($stid, OCI_ASSOC)) {        
         foreach ($row as $item) {
                 if ($row[0] == $item){
@@ -232,14 +242,11 @@ if(isset($_POST['submitData'])) {
         $results .= '</td></tr>';
     }
 
-
     oci_free_statement($stid);
-    oci_close($conn);
-        
+    oci_close($conn);      
 }
 
 ?>
-
 <html>
 <head>
 <title>Data Analysis</title>
@@ -255,6 +262,7 @@ if(isset($_POST['submitData'])) {
 
 <p><?php echo $message ?></p>
 
+<!-- Accept user input -->
 <form name="DataForm" action="<?php echo $php_self?>" method="post" >
 <table
     
@@ -294,13 +302,8 @@ if(isset($_POST['submitData'])) {
 </tr>
 </table>
 
-
+<!-- Display results -->
 <?php
-
-//echo '<p>';
-//echo $sql;
-//echo '</p>';
-
     if (isset($_POST['submitData'])) {      
         if ($results) {
             echo '<table border="1">';
@@ -313,7 +316,6 @@ if(isset($_POST['submitData'])) {
             echo '<b><i>No results found</i></b>';
         }
     }
-
 ?>
 
 </table>

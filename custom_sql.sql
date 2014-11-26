@@ -42,4 +42,11 @@ WHERE photo_id not in
 ) ORDER BY total desc;
 
 INSERT INTO users VALUES ('admin', 'password', sysdate);
+
+create or replace PROCEDURE sync_index AS
+BEGIN
+ ctx_ddl.sync_index('descIndex');
+ ctx_ddl.sync_index('subjIndex');
+ ctx_ddl.sync_index('placeIndex');
+END sync_index;
         

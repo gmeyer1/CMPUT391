@@ -9,11 +9,11 @@ if (!$_SESSION['username']) {
 
 $user = $_SESSION['username'];
 
-
 $message = 'Select an image for upload';
 $registered = true;
 $php_self = $_SERVER['PHP_SELF'];
 
+// Retrieve groups the user can upload to
 $conn=connect();
 
 if ($user == 'admin') {
@@ -38,22 +38,20 @@ while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
 oci_free_statement($stid);
 oci_close($conn);
 
+// Define max thumbnail size
 define('MAX_THUMBNAIL_DIMENSION', 100);
 
+// Define default timezone
 date_default_timezone_set('America/Denver');
 
-$message = '<p>before isset check</p>';
-
+// modified from https://docs.oracle.com/cd/B28359_01/appdev.111/b28845/ch7.htm
 if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles']))
-    {
-    
-    $message = '<p>Received, uploading</p>';
-    
-    foreach ($_FILES['userfiles']['name'] as $i => $name) {
-        
-        $message = '<p>In foreach</p>';
+    {    
+    // Iterate through all files that were selected
+    foreach ($_FILES['userfiles']['name'] as $i => $name) {   
+        // Try to upload image to database in blob format
         try    {
-
+            // Retrieve entered info
             $subject = $_POST['subject'];
             $place = $_POST['place'];
             $description = $_POST['description'];
@@ -65,6 +63,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
 
             $imgcheck = 0;
             
+            // Check to see that image type is jpeg, jpg, or gif according to project spec
             switch ($imageFileType) {
                 case 'jpg': 
                     if (getimagesize($_FILES['userfiles']['tmp_name'][$i]) != false)
@@ -81,25 +80,17 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
                 default:
                     $imgcheck = 0;
             }
-
-            //$message = $imgcheck;
             
-            if($imgcheck == 1)
-                {
-                /***  get the image info. ***/
-                //$size = getimagesize($_FILES['userfile']['tmp_name']);
-                /*** assign our variables ***/             
+            // Image accepted, upload
+            if($imgcheck == 1) {
                 $image = file_get_contents($_FILES['userfiles']['tmp_name'][$i]);
                 $thumbnail = thumbnail($_FILES['userfiles']['tmp_name'][$i]);
 
-                //$size = $size[3];
                 $name = $_FILES['userfiles']['name'][$i];
                 $maxsize = 99999999;
 
-
-                /***  check the file is less than the maximum file size ***/
-                if($_FILES['userfiles']['size'][$i] < $maxsize )
-                    {
+                // Make sure image size is less than max
+                if($_FILES['userfiles']['size'][$i] < $maxsize ) {
                     ini_set('display_errors', 1);
                     error_reporting(E_ALL);
 
@@ -110,44 +101,27 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
                         trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
                     }
 
-//                $curr_id = 0;
-//        
-//                $sql = 'SELECT MAX(photo_id) FROM images';
-//                $stid = oci_parse($conn, $sql);
-//                oci_execute($stid);
-//                
-//                $row = oci_fetch_array($stid);
-//
-//                if($row) {
-//                    $curr_id = $row['MAX(PHOTO_ID)'];
-//                }
-//
-//                $curr_id++;
-//
-//                oci_free_statement($stid);
-                
+                    // Generate unique ID
                     $curr_id = hexdec(uniqid());
 
-                    //$message = '<p>Building query</p>';
+                    // Need to assign a unique ID to every picture and let the uploader choose group for permission
+                    $sql = 'INSERT INTO images VALUES '
+                            . '('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\','
+                            . 'TO_DATE(\''.$date.'\', \'yyyy/mm/dd\'),\''.$description.'\',empty_blob(),empty_blob()) '
+                            . 'RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
 
-                    /*** our sql query ***/
-                    // Need to assign a unique ID to every picture, and somehow let the uploader choose group for permission
-                    $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\',TO_DATE(\''.$date.'\', \'yyyy/mm/dd\'),\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
-
-                    //$message = $sql;
-                    
                     $stid = oci_parse($conn, $sql);
 
+                    // Create blobs from photo and thumbnail
                     $thumbnail_blob = oci_new_descriptor($conn, OCI_D_LOB);
                     $photo_blob = oci_new_descriptor($conn, OCI_D_LOB);
 
                     oci_bind_by_name($stid, ':thumbnail', $thumbnail_blob, -1, OCI_B_BLOB);
                     oci_bind_by_name($stid, ':photo', $photo_blob, -1, OCI_B_BLOB);
 
-                    //Execute a statement returned from oci_parse()
-
                     $res=oci_execute($stid, OCI_NO_AUTO_COMMIT);
 
+                    // Save image blobs to database
                     if(!$thumbnail_blob->save($thumbnail) || !$photo_blob->save($image)) {
                         oci_rollback($conn);
                     }
@@ -156,53 +130,44 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
                     }
 
                     if (!$res) {
-                    $err = oci_error($stid); 
-                    echo htmlentities($err['message']);
+                        $err = oci_error($stid); 
+                        echo htmlentities($err['message']);
                     }
 
-                    // Free the statement identifier when closing the connection
                     oci_free_statement($stid);
-                    
+
+                    // Sync indexes for searching
                     $sql = 'BEGIN sync_index; END;';
                     $stid = oci_parse($conn, $sql);
                     oci_execute($stid);
                     oci_free_statement($stid);
-                    
+
                     oci_close($conn);
 
                     $photo_blob->free();
                     $thumbnail_blob->free();
-                    }
-                else
-                    {
-                    /*** throw an exception is image is not of type ***/
-                    throw new Exception("File Size Error");
-                    }
+
+                    $message = '<p>Thank you for submitting</p>';
                 }
-//            else
-//                {
-//                // if the file is not less than the maximum allowed, print an error
-//                throw new Exception("Unsupported Image Format!");
-//                }
-
-
-
-            $message = '<p>Thank you for submitting</p>';
+                else {
+                    // throw an exception if image too large
+                    throw new Exception("File Size Error");
+                }
+            }         
         }
-    
-        catch(Exception $e)
-        {
+        catch(Exception $e) {
             echo '<h4>'.$e->getMessage().'</h4>';
         }
     }
 }
     
-// https://docs.oracle.com/cd/B28359_01/appdev.111/b28845/ch7.htm    
+// modified from https://docs.oracle.com/cd/B28359_01/appdev.111/b28845/ch7.htm
+// Create a thumbnail from the submitted image
 function thumbnail($imgfile) {  
     list($w, $h, $type) = getimagesize($imgfile);
     
-    switch ($type) 
-    {
+    // Retrieve old image
+    switch ($type) {
         case IMAGETYPE_GIF: 
             $src_img = imagecreatefromgif($imgfile); 
             break;   
@@ -215,20 +180,32 @@ function thumbnail($imgfile) {
         default:
             throw new Exception('Unrecognized image type ' . $type);
     }
-    
-    if ($w > MAX_THUMBNAIL_DIMENSION || $h > MAX_THUMBNAIL_DIMENSION)
-    {
-      $scale =  MAX_THUMBNAIL_DIMENSION / (($h > $w) ? $h : $w);
-      $nw = $w * $scale;
-      $nh = $h * $scale;
 
-      $dest_img = imagecreatetruecolor($nw, $nh);
-      imagecopyresampled($dest_img, $src_img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+    if ($w > MAX_THUMBNAIL_DIMENSION || $h > MAX_THUMBNAIL_DIMENSION) {
+        // Rescale image to thumbnail size
+        $scale =  MAX_THUMBNAIL_DIMENSION / (($h > $w) ? $h : $w);
+        $nw = $w * $scale;
+        $nh = $h * $scale;
 
-      imagejpeg($dest_img, $imgfile);  // overwrite file with new thumbnail
+        $dest_img = imagecreatetruecolor($nw, $nh);
+        imagecopyresampled($dest_img, $src_img, 0, 0, 0, 0, $nw, $nh, $w, $h);
 
-      imagedestroy($src_img);
-      imagedestroy($dest_img);
+        // overwrite file with new thumbnail
+        switch ($type) {
+          case IMAGETYPE_JPEG:
+              // overwrite file with new thumbnail
+              imagejpeg($dest_img, $imgfile);  
+              break;
+          case IMAGETYPE_GIF:
+              imagegif($dest_img, $imgfile);
+              break;
+          default:
+              throw new Exception('Unrecognized image type ' . $type);
+        }
+
+        // Clean up
+        imagedestroy($src_img);
+        imagedestroy($dest_img);
     }
     
     return file_get_contents($imgfile);
