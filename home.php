@@ -50,7 +50,7 @@ if (!$_SESSION['username']) {
 if($_SESSION['username'] == 'admin') {
 ?>
 
-<form name="OLAPForm" action="olap.php" method="get" >
+<form name="OLAPForm" action="cube.php" method="get" >
 
 <input type="submit" value="OLAP Report">
 

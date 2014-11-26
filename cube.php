@@ -8,6 +8,9 @@ if (!$_SESSION['username']) {
     redirect('login.php');
 }
 $user = $_SESSION['username'];
+if ($user != 'admin') {
+    redirect('home.php');
+}
 
 if(!empty($_POST) && isset($_POST['submitData'])) {
     // The user submitted information
