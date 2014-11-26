@@ -87,8 +87,6 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         }
     }
     
-    $message = $sql;
-    
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     

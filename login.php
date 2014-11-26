@@ -88,11 +88,11 @@ if(!empty($_POST) && isset($_POST['logout'])) {
 <table>
 <tr valign=top align=left>
 <td><b><i>Username:</i></b></td>
-<td><input type="text" name="userid" value="user" autofocus ><br></td>
+<td><input type="text" name="userid" value="" autofocus ><br></td>
 </tr>
 <tr valign=top align=left>
 <td><b><i>Password:</i></b></td>
-<td><input type="password" name="password" value="pass"></td>
+<td><input type="password" name="password" value=""></td>
 </tr>
 </table>
 <input type="submit" name="submitLogin" value="Login">

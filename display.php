@@ -273,13 +273,7 @@ oci_close($conn);
                 $message .= htmlentities($err['message']);
                 $message .= "<br/>Could not insert view";
             }
-            else{ 
-                $message = 'Added view';
-            }
 
-        }
-        else {
-            $message = 'View already exists';
         }
         oci_free_statement($stid);
         oci_close($conn);
@@ -287,7 +281,6 @@ oci_close($conn);
         
         
         echo $imageTag;
-        echo 'Message: ' . $message;
 ?>
 
 <form id='edit' action="<?php echo $php_self?>" method='post'
