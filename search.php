@@ -26,33 +26,45 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
     if ($keywords != '') {
         $key_array = explode(' ', $keywords);
         
-        $sql = 'SELECT r.photo_id, i.thumbnail, r.tot_score from ( SELECT photo_id, timing, SUM(score) as tot_score from ( SELECT photo_id, timing, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$key_array[0].'\', 1) > 0 OR CONTAINS (place, \''.$key_array[0].'\', 2) > 0 OR CONTAINS (description, \''.$key_array[0].'\', 3) > 0';
+        //$sql = 'SELECT r.photo_id, i.thumbnail, r.tot_score from ( SELECT photo_id, SUM(score) as tot_score from ( SELECT photo_id, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$key_array[0].'\', 1) > 0 OR CONTAINS (place, \''.$key_array[0].'\', 2) > 0 OR CONTAINS (description, \''.$key_array[0].'\', 3) > 0';
+        
+        $contains = $key_array[0];
         
         foreach ($key_array as $key) {
             if ($key_array[0] != $key) {
-                $sql = $sql . ' UNION ALL SELECT photo_id, timing, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$key.'\', 1) > 0 OR CONTAINS (place, \''.$key.'\', 2) > 0 OR CONTAINS (description, \''.$key.'\', 3) > 0';
+                //$sql = $sql . ' UNION ALL SELECT photo_id, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$key.'\', 1) > 0 OR CONTAINS (place, \''.$key.'\', 2) > 0 OR CONTAINS (description, \''.$key.'\', 3) > 0';
+                $contains = $contains . ' | ' . $key;
+                
             }
         }
         
-        $sql = $sql . ') GROUP BY photo_id, timing ) r JOIN images i ON i.photo_id = r.photo_id';
+        $sql = 'SELECT photo_id, thumbnail, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$contains.'\', 1) > 0 OR CONTAINS (place, \''.$contains.'\', 2) > 0 OR CONTAINS (description, \''.$contains.'\', 3) > 0';
         
-        $sql = $sql . ' WHERE (i.owner_name = \''.$user.'\' or i.permitted = 1 or i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+        //$sql = $sql . ') GROUP BY photo_id) r JOIN images i ON i.photo_id = r.photo_id';
+        
+        //$sql = $sql . ' and (i.owner_name = \''.$user.'\' or i.permitted = 1 or i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+        $sql = $sql . ' and (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
         
         if ($after != '') {
-            $sql = $sql . ' and r.timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            //$sql = $sql . ' and i.timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
         }
         else if ($before != '') {
-            $sql = $sql . ' and r.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            //$sql = $sql . ' and i.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $sql = $sql . ' and timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }
         
         if ($searchType == 'newest') {
-            $sql = $sql . ' ORDER BY r.timing DESC';
+            //$sql = $sql . ' ORDER BY i.timing DESC';
+            $sql = $sql . ' ORDER BY timing DESC';
         }
         else if ($searchType == 'oldest') {
-            $sql = $sql . ' ORDER BY r.timing';
+            //$sql = $sql . ' ORDER BY i.timing';
+            $sql = $sql . ' ORDER BY timing';
         }
         else {
-            $sql = $sql . ' ORDER BY r.tot_score DESC';
+            //$sql = $sql . ' ORDER BY r.tot_score DESC';
+            $sql = $sql . ' ORDER BY score DESC';
         }
     }
     else {
@@ -74,6 +86,8 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
             $sql = $sql . ' ORDER BY timing';
         }
     }
+    
+    $message = $sql;
     
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
@@ -127,6 +141,7 @@ else {
     ?>
     
 </p>
+<p><?php echo $message ?></p>
 
 <form name="SearchForm" action="<?php echo $php_self?>" method="post" >
 <table
