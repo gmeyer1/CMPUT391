@@ -23,6 +23,10 @@ if (isset($_POST['addGroup'])) {
         $message = "Group " . $group_name . " already exists";
         $valid = false;
     }
+    else if (empty($group_name)) {
+        $message = "Group name cannot be empty";
+        $valid = false;
+    }
     else {
     
         $sql = 'SELECT MAX(group_id) FROM groups';
