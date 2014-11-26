@@ -14,7 +14,7 @@ $subject = "subject";
 $place = "place";
 $description = "description";
 $owner = "";
-$deleted = 0;
+$deleted = false;
 $updated = 0;
 $photo_group = -1;
 $conn=connect();
@@ -39,7 +39,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
     if ($row) {
         $owner = $row['OWNER_NAME'];
         $permitted = $row['PERMITTED'];
-        if ($owner != $user) {
+        if ($owner != $user && $user != 'admin') {
             redirect('search.php');
         }
     }
@@ -77,7 +77,7 @@ if (!empty($_POST) && isset($_POST['submitEdit'])) {
 else if (!empty($_POST) && isset($_POST['submitDelete'])) {
     
     $photo_id = $_POST['photo_id'];
-    
+    $deleted_views = false;
     $sql = 'SELECT owner_name, permitted FROM images WHERE photo_id = \'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
@@ -85,7 +85,7 @@ else if (!empty($_POST) && isset($_POST['submitDelete'])) {
     if ($row) {
         $owner = $row['OWNER_NAME'];
         $permitted = $row['PERMITTED'];
-        if ($owner != $user) {
+        if ($owner != $user && $user != 'admin') {
             redirect('search.php');
         }
     }
@@ -95,29 +95,47 @@ else if (!empty($_POST) && isset($_POST['submitDelete'])) {
     
     oci_free_statement($stid);
 
-    $sql = 'DELETE FROM images WHERE photo_id = \'' . $photo_id . '\'';
+    $sql = 'DELETE FROM popular_images WHERE photo_id = \'' . $photo_id . '\'';
     $stid = oci_parse($conn, $sql);
-    $row = oci_execute($stid, OCI_DEFAULT);  
+    $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
     if($row) {
-        // This might not be needed??
-        if (oci_commit($conn)) {
-            $deleted = 1;
-        }
-        else {
-            $err = oci_error($stid); 
-            echo htmlentities($err['message']);
-        }        
+        $deleted_views = true;      
     }  
-    else { 
+    else {
         $err = oci_error($stid); 
         echo htmlentities($err['message']);
+        oci_rollback($conn);
     }
     oci_free_statement($stid);
     
-    $sql = 'BEGIN sync_index; END;';
-    $stid = oci_parse($conn, $sql);
-    oci_execute($stid);
-    oci_free_statement($stid);
+    
+    if ($deleted_views) {
+        $sql = 'DELETE FROM images WHERE photo_id = \'' . $photo_id . '\'';
+        $stid = oci_parse($conn, $sql);
+        $row = oci_execute($stid, OCI_NO_AUTO_COMMIT);  
+        if($row) {
+            // This might not be needed??
+            if (oci_commit($conn)) {
+                $deleted = 1;
+            }
+            else {
+                $err = oci_error($stid); 
+                echo htmlentities($err['message']);
+                oci_rollback($conn);
+            }        
+        }  
+        else { 
+            $err = oci_error($stid); 
+            echo htmlentities($err['message']);
+            oci_rollback($conn);
+        }
+        oci_free_statement($stid);
+
+        $sql = 'BEGIN sync_index; END;';
+        $stid = oci_parse($conn, $sql);
+        oci_execute($stid);
+        oci_free_statement($stid);
+    }
     
     oci_close($conn);
 }
