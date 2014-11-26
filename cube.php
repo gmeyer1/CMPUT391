@@ -12,7 +12,8 @@ if ($user != 'admin') {
     redirect('home.php');
 }
 
-if(!empty($_POST) && isset($_POST['submitData'])) {
+//if(!empty($_POST) && isset($_POST['submitData'])) {
+if(isset($_POST['submitData'])) {
     // The user submitted information
     $keywords = $_POST['keywords'];
     $key_array = explode(' ', $keywords);
@@ -32,18 +33,26 @@ if(!empty($_POST) && isset($_POST['submitData'])) {
     
     $check = 0;
     
+    $columns = '<tr><td><b>';
+    
     if ($showUsers) {
         $sql .= ' owner_name';
         $check = 1;
+        
+        $columns .= 'User';
     }
     
     if ($showSubjects) {
         if ($check == 0) {
             $sql .= ' subject';
             $check = 1;
+            
+            $columns .= 'Subject';
         }
         else {
             $sql .= ', subject';
+            
+            $columns .= '</b></td><td><b>Subject';
         }
     }
     
@@ -51,9 +60,13 @@ if(!empty($_POST) && isset($_POST['submitData'])) {
         if ($check == 0) {
             $sql .= ' EXTRACT(YEAR FROM timing) year';
             $check = 1;
+            
+            $columns .= 'Year';
         }
         else {
             $sql .= ', EXTRACT(YEAR FROM timing) year';
+            
+            $columns .= '</b></td><td><b>Year';
         }
     }
     
@@ -61,9 +74,13 @@ if(!empty($_POST) && isset($_POST['submitData'])) {
         if ($check == 0) {
             $sql .= ' EXTRACT(MONTH FROM timing) month';
             $check = 1;
+            
+            $columns .= 'Month';
         }
         else {
             $sql .= ', EXTRACT(MONTH FROM timing) month';
+            
+            $columns .= '</b></td><td><b>Month';
         }
     }
     
@@ -71,18 +88,28 @@ if(!empty($_POST) && isset($_POST['submitData'])) {
         if ($check == 0) {
             $sql .= ' TO_CHAR(timing,\'WW\') week';
             $check = 1;
+            
+            $columns .= 'Week';
         }
         else {
             $sql .= ', TO_CHAR(timing,\'WW\') week';
+            
+            $columns .= '</b></td><td><b>Week';
         }
     }
     
     if ($check == 0) {
         $sql .= ' COUNT(*) count FROM images';
+        
+        $columns .= 'Count';
     }
     else {
        $sql .= ', COUNT(*) count FROM images';
+       
+       $columns .= '</b></td><td><b>Count';
     }
+    
+    $columns .= '</b></td></tr>';
     
     $check = 0;
     
@@ -176,12 +203,27 @@ if(!empty($_POST) && isset($_POST['submitData'])) {
         }
     }
     
+    $conn=connect();
+        
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     
-    
+    while ($row = oci_fetch_array($stid, OCI_ASSOC)) {        
+        foreach ($row as $item) {
+                if ($row[0] == $item){
+                    $results .= '<tr><td>'.$item;
+                }
+                else {
+                    $results .= '</td><td>'.$item;
+                }
+        }
+        $results .= '</td></tr>';
+    }
+
+
     oci_free_statement($stid);
     oci_close($conn);
+        
 }
 
 ?>
@@ -241,13 +283,24 @@ if(!empty($_POST) && isset($_POST['submitData'])) {
 </table>
 
 
-
-
 <?php
 
-echo '<p>';
-echo $sql;
-echo '</p>';
+//echo '<p>';
+//echo $sql;
+//echo '</p>';
+
+    if (isset($_POST['submitData'])) {      
+        if ($results) {
+            echo '<table border="1">';
+            echo '<caption>Query Results:</caption>';
+            echo $columns;
+            echo $results;
+            echo '</table>';
+        }
+        else {
+            echo '<b><i>No results found</i></b>';
+        }
+    }
 
 ?>
 
