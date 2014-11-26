@@ -1,73 +1,65 @@
 <?php
-include_once ("helper.php"); 
+include_once ("helper.php");
+
 $message = "";
 $images = "";
 $php_self = $_SERVER['PHP_SELF'];
+
 session_start();
 if (!$_SESSION['username']) {
+    // If user hasn't started a session, redirect to login page
     redirect('login.php');
 }
+
+// Get username of current user from session
 $user = $_SESSION['username'];
 
 if(!empty($_POST) && isset($_POST['submitSearch'])) {
-    // The user submitted information
+    // The user submitted search query, get the conditions
     $keywords = $_POST['keywords'];
     $after = $_POST['after'];
     $after = str_replace('-', '/', $after);
     $before = $_POST['before'];
     $before = str_replace('-', '/', $before);
     $searchType = $_POST['searchType'];
-
-    //$message = "keywords: " . $keywords . ", after: " . $after . ", before: " . $before;
-    //Search for images based on submitted conditions
     
     $conn=connect();
     
     if ($keywords != '') {
+        // If there are keywords
         $key_array = explode(' ', $keywords);
-        
-        //$sql = 'SELECT r.photo_id, i.thumbnail, r.tot_score from ( SELECT photo_id, SUM(score) as tot_score from ( SELECT photo_id, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$key_array[0].'\', 1) > 0 OR CONTAINS (place, \''.$key_array[0].'\', 2) > 0 OR CONTAINS (description, \''.$key_array[0].'\', 3) > 0';
         
         $contains = $key_array[0];
         
         foreach ($key_array as $key) {
             if ($key_array[0] != $key) {
-                //$sql = $sql . ' UNION ALL SELECT photo_id, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$key.'\', 1) > 0 OR CONTAINS (place, \''.$key.'\', 2) > 0 OR CONTAINS (description, \''.$key.'\', 3) > 0';
                 $contains = $contains . ' | ' . $key;
-                
             }
         }
         
         $sql = 'SELECT photo_id, thumbnail, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$contains.'\', 1) > 0 OR CONTAINS (place, \''.$contains.'\', 2) > 0 OR CONTAINS (description, \''.$contains.'\', 3) > 0';
         
-        //$sql = $sql . ') GROUP BY photo_id) r JOIN images i ON i.photo_id = r.photo_id';
-        
-        //$sql = $sql . ' and (i.owner_name = \''.$user.'\' or i.permitted = 1 or i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
         $sql = $sql . ' and (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
         
         if ($after != '') {
-            //$sql = $sql . ' and i.timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
             $sql = $sql . ' and timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
         }
         else if ($before != '') {
-            //$sql = $sql . ' and i.timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
             $sql = $sql . ' and timing < TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }
         
         if ($searchType == 'newest') {
-            //$sql = $sql . ' ORDER BY i.timing DESC';
             $sql = $sql . ' ORDER BY timing DESC';
         }
         else if ($searchType == 'oldest') {
-            //$sql = $sql . ' ORDER BY i.timing';
             $sql = $sql . ' ORDER BY timing';
         }
         else {
-            //$sql = $sql . ' ORDER BY r.tot_score DESC';
             $sql = $sql . ' ORDER BY score DESC';
         }
     }
     else {
+        // Else there are no keywords
         $sql = 'SELECT photo_id, thumbnail FROM images';
         
         $sql = $sql . ' WHERE (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
@@ -102,37 +94,37 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
 }
 else {
     $conn=connect();
-    //$sql = 'SELECT thumbnail, photo_id FROM images WHERE (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
     
     //Awesome sql query to find 5 most popular images that current user can view
     $sql = 'SELECT i.photo_id, i.thumbnail FROM images i
-JOIN total_views v ON v.photo_id = i.photo_id
-WHERE v.total IN (
-    SELECT t.total FROM total_views t
-    join images p on p.photo_id = t.photo_id 
-    WHERE ROWNUM < 6
-    and (p.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or p.permitted = 1 or
-    p.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
-)
-and (i.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or i.permitted = 1 or
-i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
-ORDER BY v.total desc';
+            JOIN total_views v ON v.photo_id = i.photo_id
+            WHERE v.total IN (
+                SELECT t.total FROM total_views t
+                join images p on p.photo_id = t.photo_id 
+                WHERE ROWNUM < 6
+                and (p.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or p.permitted = 1 or
+                p.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
+            )
+            and (i.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or i.permitted = 1 or
+            i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
+            ORDER BY v.total desc';
     
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     
     $images = '<br><tr><td>Popular Images: </td></tr>';
     while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+        // Loop through all popular images
         $id = $row['PHOTO_ID'];
         $data = $row['THUMBNAIL']->load();
+        
+        // Append its thumbnail as clickable image to display.php
         $images .= '<tr><td><a href=display.php?photo_id=' . $id . '><img src="data:image/jpeg;base64,'.base64_encode( $data ).'"/></a></td></tr>';            
     }
     
     oci_close($conn);
 }
-    
 ?>
-
 <html>
 <head>
 <title>Search</title>

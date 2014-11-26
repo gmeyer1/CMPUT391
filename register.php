@@ -4,98 +4,104 @@ require_once("helper.php");
 $message = "";
 $php_self = $_SERVER['PHP_SELF'];
 $valid = true;
+$success = false;
 
 if(!empty($_POST) && isset($_POST['submitRegister'])) {
+    // If the user submitted registration
+    $firstName = $_POST['firstName'];
+    $lastName = $_POST['lastName'];
+    $email = $_POST['email'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $address = $_POST['address'];
+    $phone = $_POST['phone'];
+    $date = date('d.M.y');
 
-	$firstName = $_POST['firstName'];
-	$lastName = $_POST['lastName'];
-	$email = $_POST['email'];
-	$username = $_POST['username'];
-	$password = $_POST['password'];
-	$address = $_POST['address'];
-	$phone = $_POST['phone'];
-        $date = date('d.M.y');
-        
-        if (empty($firstName) || empty($lastName) || empty($email) || empty($username) || empty($password) || empty($address) || empty($phone)) {
+    if (empty($firstName) || empty($lastName) || empty($email) || empty($username) || empty($password) || empty($address) || empty($phone)) {
+        // If any fields are empty, invalid registration
+        $valid = false;
+        $message = "Fields with a (*) are required";
+    }
+
+    // Connect to database
+    $conn=connect();
+    if (!$conn) {
+        $e = oci_error();
+        $valid = false;
+        $message = $e;
+    }
+    else if ($valid) {
+        // Check if user and email are unique
+        $sql = 'SELECT user_name FROM persons WHERE user_name = \'' . $username . '\' or email = \'' . $email . '\'';
+        $stid = oci_parse($conn, $sql);
+        oci_execute($stid);
+        $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+        if ($row) {
+            $message = "Username or email already in use";
             $valid = false;
-            $message = "Fields with a (*) are required";
         }
+
+        oci_free_statement($stid);
+    }
+
+    if ($valid) {
+        // If the user submitted a valid registration, add account
+        // SQL command to add user to users table
+        $sql = 'INSERT INTO users VALUES (\''.$username.'\',\''.$password.'\',\''.$date.'\')'; 
         
-        //Add a check that no field is blank
-        
-        $conn=connect();
-        if (!$conn) {
-            $e = oci_error();
+        // Prepare sql using conn and returns the statement identifier
+        $stid = oci_parse($conn, $sql );
+
+        // Execute a statement returned from oci_parse()
+        $res=oci_execute($stid);
+
+        if (!$res) {
+            $err = oci_error($stid); 
+            $message .= htmlentities($err['message']);
             $valid = false;
-            $message = $e;
         }
-        else if ($valid) {
-            $sql = 'SELECT user_name FROM persons WHERE user_name = \'' . $username . '\' or email = \'' . $email . '\'';
-            $stid = oci_parse($conn, $sql);
-            oci_execute($stid);
-            $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
-            if ($row) {
-                $message = "Username or email already in use";
-                $valid = false;
-            }
-            else {
-                $message = "New username and email";
-            }
-
-            oci_free_statement($stid);
+        else {
+            $success = true;
         }
 
-	if ($valid) {
+        oci_free_statement($stid);
 
-            //sql command
-            $sql = 'INSERT INTO users VALUES (\''.$username.'\',\''.$password.'\',\''.$date.'\')'; 
-            //Prepare sql using conn and returns the statement identifier
-            $stid = oci_parse($conn, $sql );
+        // SQL command to add user info to persons table
+        $sql = 'INSERT INTO persons VALUES (\''.$username.'\',\''.$firstName.'\',\''.$lastName.'\',\''.$address.'\',\''.$email.'\',\''.$phone.'\')'; 
+        
+        //Prepare sql using conn and returns the statement identifier
+        $stid = oci_parse($conn, $sql );
 
-            //Execute a statement returned from oci_parse()
-            $res=oci_execute($stid);
+        //Execute a statement returned from oci_parse()
+        $res=oci_execute($stid);
 
-            if (!$res) {
-                //rollback?
-                $err = oci_error($stid); 
-                $message .= htmlentities($err['message']);
-                $valid = false;
-            }
-            
-            oci_free_statement($stid);
-            
-            //sql command
-            $sql = 'INSERT INTO persons VALUES (\''.$username.'\',\''.$firstName.'\',\''.$lastName.'\',\''.$address.'\',\''.$email.'\',\''.$phone.'\')'; 
-            //Prepare sql using conn and returns the statement identifier
-            $stid = oci_parse($conn, $sql );
+        if (!$res) {
+            $err = oci_error($stid); 
+            $message .= htmlentities($err['message']);
+            $valid = false;
+        }
 
-            //Execute a statement returned from oci_parse()
-            $res=oci_execute($stid);
+        // Free the statement identifier when closing the connection
+        oci_free_statement($stid);
 
-            if (!$res) {
-                //rollback??
-                $err = oci_error($stid); 
-                $message .= htmlentities($err['message']);
-                $valid = false;
-            }
+    }
 
-            // Free the statement identifier when closing the connection
-            oci_free_statement($stid);
-            
-	}
+    // Close database connection
+    oci_close($conn);
 
-        oci_close($conn);
-
-	if($valid) {
-		redirect('success.html');
-	}
+    if($success) {
+        // If the registration was successful, show success page
+        redirect('success.html');
+    }
+    else {
+        // If there was a problem registering
+        $message = "Problem registering";
+    }
 }
 else {
     $message = "Fill in the following information to register";
 }
 ?>
-
-
 <html>
 <head>
 <title>Register</title>
