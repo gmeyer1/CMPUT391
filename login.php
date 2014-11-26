@@ -1,4 +1,10 @@
 <?php
+/*
+ * CMPUT 391 Project Group 6
+ * Written by Glenn Meyer and Dylan Stankievech
+ * November 26, 2014 * 
+ * 
+ */
 include_once ("helper.php"); 
 $wrongLogin = true;
 $message = "If you have registered, login using the form below";

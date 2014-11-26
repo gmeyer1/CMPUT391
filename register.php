@@ -1,4 +1,10 @@
 <?PHP
+/*
+ * CMPUT 391 Project Group 6
+ * Written by Glenn Meyer and Dylan Stankievech
+ * November 26, 2014 * 
+ * 
+ */
 require_once("helper.php");
 
 $message = "";
