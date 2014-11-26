@@ -46,7 +46,7 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         // Construct the query based on keywords, and the other search criteria entered
         $sql = 'SELECT photo_id, thumbnail, ((SCORE(1) * 6) + (SCORE(2) * 3) + SCORE(3)) score FROM images WHERE CONTAINS (subject, \''.$contains.'\', 1) > 0 OR CONTAINS (place, \''.$contains.'\', 2) > 0 OR CONTAINS (description, \''.$contains.'\', 3) > 0';
         
-        $sql = $sql . ' and (owner_name = \''.$user.'\' or \''.$user.'\' = \'admin\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+        $sql = $sql . ' and (owner_name = \''.$user.'\' or \''.$user.'\' = \'admin\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\') or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = permitted))';
         
         if ($after != '') {
             $sql = $sql . ' and timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
@@ -69,7 +69,7 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         // Else there are no keywords, so construct the query only based on time
         $sql = 'SELECT photo_id, thumbnail FROM images';
         
-        $sql = $sql . ' WHERE (owner_name = \''.$user.'\' or \''.$user.'\' = \'admin\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+        $sql = $sql . ' WHERE (owner_name = \''.$user.'\' or \''.$user.'\' = \'admin\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\') or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = permitted))';
         
         if ($after != '') {
             $sql = $sql . ' and timing > TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
@@ -113,10 +113,12 @@ else {
                 join images p on p.photo_id = t.photo_id 
                 WHERE ROWNUM < 6
                 and (p.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or p.permitted = 1 or
-                p.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
+                p.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\')
+                or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = i.permitted))
             )
             and (i.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or i.permitted = 1 or
-            i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
+            i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\')
+            or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = i.permitted))
             ORDER BY v.total desc';
     
     $stid = oci_parse($conn, $sql);
