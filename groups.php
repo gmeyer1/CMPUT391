@@ -10,7 +10,6 @@ $user = $_SESSION['username'];
 $php_self = $_SERVER['PHP_SELF'];
 $conn=connect();
 
-
 if (isset($_POST['addGroup'])) {
     $group_name = $_POST['group_name'];
     $curr_id = 0;
