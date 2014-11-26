@@ -232,10 +232,44 @@ oci_close($conn);
 
 
 <?php
-    //If the image exists, show all its information
-    //TODO: add a check that the user has permission to view it
+    //If the image exists, and user has permission to view it
     if ($data) {
+        
+        $conn=connect();
+        
+        $sql = 'SELECT user_name FROM popular_images WHERE user_name = \'' . $user . '\' and photo_id = \'' . $photo_id . '\'';
+        $stid = oci_parse($conn, $sql);
+        oci_execute($stid);
+        $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+        if (!$row) {
+
+            oci_free_statement($stid);
+
+            $sql = 'INSERT INTO popular_images VALUES (\''.$user.'\',\''.$photo_id.'\')'; 
+
+            $stid = oci_parse($conn, $sql);
+            $res=oci_execute($stid);
+
+            if (!$res) {
+                $err = oci_error($stid); 
+                $message .= htmlentities($err['message']);
+                $message .= "<br/>Could not insert view";
+            }
+            else{ 
+                $message = 'Added view';
+            }
+
+        }
+        else {
+            $message = 'View already exists';
+        }
+        oci_free_statement($stid);
+        oci_close($conn);
+        
+        
+        
         echo $imageTag;
+        echo 'Message: ' . $message;
 ?>
 
 <form id='edit' action="<?php echo $php_self?>" method='post'
