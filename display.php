@@ -18,7 +18,8 @@ $deleted = 0;
 $updated = 0;
 $photo_group = -1;
 $conn=connect();
-$group_name = "public";
+$image_group_name = "public";
+$group_name = "";
 
 if (!empty($_POST) && isset($_POST['submitEdit'])) {
     //Need to save new image values, and should probably check again that current user is owner
@@ -149,7 +150,7 @@ else if (!empty($_GET) && isset($_GET['photo_id'])) {
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
     if ($row) {
-        $group_name = $row['GROUP_NAME'];
+        $image_group_name = $row['GROUP_NAME'];
     }
         
     oci_free_statement($stid);  
@@ -160,7 +161,7 @@ if ($permitted == -1) {
 }
 else if ($owner != $user && $user != 'admin' && $permitted != 1) {
     
-    $sql = 'SELECT g.group_id FROM groups g, group_lists l WHERE g.group_id = l.group_id and (g.user_name=\'' . $user . '\' or l.friend_id=\'' . $user . '\')';
+    $sql = 'SELECT g.group_id, g.group_name, g.user_name FROM groups g left outer join group_lists l on g.group_id=l.group_id WHERE g.group_id = l.group_id and (g.user_name=\'' . $user . '\' or l.friend_id=\'' . $user . '\')';
 
     //$sql = 'select group_id from group_lists where friend_id=\'' . $user . '\'';
 
@@ -231,10 +232,44 @@ oci_close($conn);
 
 
 <?php
-    //If the image exists, show all its information
-    //TODO: add a check that the user has permission to view it
+    //If the image exists, and user has permission to view it
     if ($data) {
+        
+        $conn=connect();
+        
+        $sql = 'SELECT user_name FROM popular_images WHERE user_name = \'' . $user . '\' and photo_id = \'' . $photo_id . '\'';
+        $stid = oci_parse($conn, $sql);
+        oci_execute($stid);
+        $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+        if (!$row) {
+
+            oci_free_statement($stid);
+
+            $sql = 'INSERT INTO popular_images VALUES (\''.$user.'\',\''.$photo_id.'\')'; 
+
+            $stid = oci_parse($conn, $sql);
+            $res=oci_execute($stid);
+
+            if (!$res) {
+                $err = oci_error($stid); 
+                $message .= htmlentities($err['message']);
+                $message .= "<br/>Could not insert view";
+            }
+            else{ 
+                $message = 'Added view';
+            }
+
+        }
+        else {
+            $message = 'View already exists';
+        }
+        oci_free_statement($stid);
+        oci_close($conn);
+        
+        
+        
         echo $imageTag;
+        echo 'Message: ' . $message;
 ?>
 
 <form id='edit' action="<?php echo $php_self?>" method='post'
@@ -277,7 +312,7 @@ oci_close($conn);
     
         <?php
         echo '<tr><td><b><i>Owner: </i></b></td><td><b><i>' . $owner . '</i></b></td></tr>';
-        echo '<tr><td><b><i>Group: </i></b></td><td><b><i>' . $group_name . '</i></b></td><td></tr>';
+        echo '<tr><td><b><i>Group: </i></b></td><td><b><i>' . $image_group_name . '</i></b></td><td></tr>';
         if ($user == $owner || $user == 'admin') {
             echo '<tr><td><b><i>Update group:</i></b></td><td>';
             echo '<select name="group_id">';
