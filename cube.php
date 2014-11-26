@@ -144,13 +144,23 @@ if(isset($_POST['submitData'])) {
         }
     }
     
-    if ($after != '' && $before != '') {
+    if ($after != '') {
         if ($check == 0) {
-            $sql .= ' WHERE timing BETWEEN TO_DATE(\''.$before.'\', \'yyyy/mm/dd\') AND TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            $sql .= ' WHERE timing < TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
             $check = 1;
         }
         else {
-            $sql .= ' AND timing BETWEEN TO_DATE(\''.$before.'\', \'yyyy/mm/dd\') AND TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+            $sql .= ' AND timing < TO_DATE(\''.$after.'\', \'yyyy/mm/dd\')';
+        }
+    }
+    
+    if ($before != '') {
+        if ($check == 0) {
+            $sql .= ' WHERE timing > TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
+            $check = 1;
+        }
+        else {
+            $sql .= ' AND timing > TO_DATE(\''.$before.'\', \'yyyy/mm/dd\')';
         }
     }
     
@@ -203,6 +213,8 @@ if(isset($_POST['submitData'])) {
         }
     }
     
+    $sql .= ' ORDER BY count DESC';
+    
     $conn=connect();
         
     $stid = oci_parse($conn, $sql);
@@ -249,11 +261,11 @@ if(isset($_POST['submitData'])) {
 <tr valign=top align=left>
 <td><b><i>Display Fields:</i></b></td>
 <td>
-<input type="radio" name="showUsers" value="users">Users<br>
-<input type="radio" name="showSubjects" value="subjects">Subjects<br>
-<input type="radio" name="showYear" value="year">Year<br>
-<input type="radio" name="showMonth" value="month">Month<br>
-<input type="radio" name="showWeek" value="week">Week<br>
+<input type="checkbox" name="showUsers" value="users">Users<br>
+<input type="checkbox" name="showSubjects" value="subjects">Subjects<br>
+<input type="checkbox" name="showYear" value="year">Year<br>
+<input type="checkbox" name="showMonth" value="month">Month<br>
+<input type="checkbox" name="showWeek" value="week">Week<br>
 </td>
 </tr>
 
