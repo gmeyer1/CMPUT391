@@ -146,21 +146,21 @@ if(isset($_POST['submitData'])) {
     
     if ($start != '') {
         if ($check == 0) {
-            $sql .= ' WHERE timing > TO_DATE(\''.$start.'\', \'yyyy/mm/dd\')';
+            $sql .= ' WHERE timing >= TO_DATE(\''.$start.'\', \'yyyy/mm/dd\')';
             $check = 1;
         }
         else {
-            $sql .= ' AND timing > TO_DATE(\''.$start.'\', \'yyyy/mm/dd\')';
+            $sql .= ' AND timing >= TO_DATE(\''.$start.'\', \'yyyy/mm/dd\')';
         }
     }
     
     if ($end != '') {
         if ($check == 0) {
-            $sql .= ' WHERE timing < TO_DATE(\''.$end.'\', \'yyyy/mm/dd\')';
+            $sql .= ' WHERE timing <= TO_DATE(\''.$end.'\', \'yyyy/mm/dd\')';
             $check = 1;
         }
         else {
-            $sql .= ' AND timing < TO_DATE(\''.$end.'\', \'yyyy/mm/dd\')';
+            $sql .= ' AND timing <= TO_DATE(\''.$end.'\', \'yyyy/mm/dd\')';
         }
     }
     

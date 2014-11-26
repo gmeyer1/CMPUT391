@@ -37,22 +37,9 @@ if (isset($_POST['addGroup'])) {
     else {
         // Valid group name
         
-        // Get the largest current group ID
-        $sql = 'SELECT MAX(group_id) FROM groups';
-        $stid = oci_parse($conn, $sql);
-        oci_execute($stid);
-
-        $row = oci_fetch_array($stid);
-
-        if($row) {
-            $curr_id = $row['MAX(GROUP_ID)'];
-        }
-
-        // Increment to get a new unique ID
-        $curr_id++;
-
-        oci_free_statement($stid);
-
+        // Get a unique group id
+        $curr_id = hexdec(uniqid());
+        
         $date = date('d.M.y');
         
         // To create the new group
