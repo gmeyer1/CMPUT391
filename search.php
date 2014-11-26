@@ -114,7 +114,7 @@ else {
                 WHERE ROWNUM < 6
                 and (p.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or p.permitted = 1 or
                 p.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\')
-                or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = i.permitted))
+                or \''.$user.'\' in (SELECT user_name FROM groups WHERE group_id = p.permitted))
             )
             and (i.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or i.permitted = 1 or
             i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\')
