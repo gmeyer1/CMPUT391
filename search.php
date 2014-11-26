@@ -75,8 +75,6 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
         }
     }
     
-    $message = $sql;
-    
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     
@@ -129,7 +127,6 @@ else {
     ?>
     
 </p>
-<p><?php echo $message ?></p>
 
 <form name="SearchForm" action="<?php echo $php_self?>" method="post" >
 <table
