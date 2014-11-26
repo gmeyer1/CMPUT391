@@ -49,7 +49,31 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
         $date = str_replace('-', '/', $date);
         $group = $_POST['group_id'];
         
-        if(is_uploaded_file($_FILES['userfile']['tmp_name']) && getimagesize($_FILES['userfile']['tmp_name']) != false)
+        $imageFileType = pathinfo($_FILES['userfile']['name'], PATHINFO_EXTENSION);
+
+        $imgcheck = 0;
+        
+        switch ($imageFileType) {
+            case 'jpg': 
+                if (getimagesize($_FILES['userfile']['tmp_name']) != false)
+                    $imgcheck = 1;
+                break;   
+            case 'jpeg':  
+                if (getimagesize($_FILES['userfile']['tmp_name']) != false)
+                    $imgcheck = 1;
+                break;
+            case 'gif':  
+                if (getimagesize($_FILES['userfile']['tmp_name']) != false)
+                    $imgcheck = 1;
+                break;   
+            default:
+                $imgcheck = 0;
+        }
+        
+        //$message = $imgcheck;
+        
+        // && is_uploaded_file($_FILES['userfile']['tmp_name']
+        if($imgcheck == 1)
             {
             /***  get the image info. ***/
             //$size = getimagesize($_FILES['userfile']['tmp_name']);
@@ -99,7 +123,7 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfile']
                 // Need to assign a unique ID to every picture, and somehow let the uploader choose group for permission
                 $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\',TO_DATE(\''.$date.'\', \'yyyy/mm/dd\'),\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
                 
-                $message = $sql;
+                //$message = $sql;
                 
                 $stid = oci_parse($conn, $sql);
                 
@@ -165,17 +189,13 @@ function thumbnail($imgfile) {
     define('MAX_THUMBNAIL_DIMENSION', 100);
     list($w, $h, $type) = getimagesize($imgfile);
     
-    switch ($type) 
-    {
+    switch ($type) {
         case IMAGETYPE_GIF: 
             $src_img = imagecreatefromgif($imgfile); 
             break;   
         case IMAGETYPE_JPEG:  
             $src_img = imagecreatefromjpeg($imgfile); 
             break;   
-        case IMAGETYPE_PNG:  
-            $src_img = imagecreatefrompng($imgfile);
-            break; 
         default:
             throw new Exception('Unrecognized image type ' . $type);
     }
@@ -189,7 +209,16 @@ function thumbnail($imgfile) {
       $dest_img = imagecreatetruecolor($nw, $nh);
       imagecopyresampled($dest_img, $src_img, 0, 0, 0, 0, $nw, $nh, $w, $h);
 
-      imagejpeg($dest_img, $imgfile);  // overwrite file with new thumbnail
+      switch ($type) {
+        case IMAGETYPE_JPEG:
+            imagejpeg($dest_img, $imgfile);  // overwrite file with new thumbnail
+            break;
+        case IMAGETYPE_GIF:
+            imagegif($dest_img, $imgfile);
+            break;
+        default:
+            throw new Exception('Unrecognized image type ' . $type);
+      }
 
       imagedestroy($src_img);
       imagedestroy($dest_img);

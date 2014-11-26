@@ -36,6 +36,8 @@ define('MAX_THUMBNAIL_DIMENSION', 100);
 
 date_default_timezone_set('America/Denver');
 
+$message = '<p>before isset check</p>';
+
 if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles']))
     {
     
@@ -49,14 +51,38 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
             $subject = $_POST['subject'];
             $place = $_POST['place'];
             $description = $_POST['description'];
-            $date = date('d.M.y');
+            $date = $_POST['date'];//date('d.M.y');
+            $date = str_replace('-', '/', $date);
             $group = $_POST['group_id'];
+            
+            $imageFileType = pathinfo($_FILES['userfiles']['name'][$i], PATHINFO_EXTENSION);
 
-            if(is_uploaded_file($_FILES['userfiles']['tmp_name'][$i]) && getimagesize($_FILES['userfiles']['tmp_name'][$i]) != false)
+            $imgcheck = 0;
+            
+            switch ($imageFileType) {
+                case 'jpg': 
+                    if (getimagesize($_FILES['userfiles']['tmp_name'][$i]) != false)
+                        $imgcheck = 1;
+                    break;   
+                case 'jpeg':  
+                    if (getimagesize($_FILES['userfiles']['tmp_name'][$i]) != false)
+                        $imgcheck = 1;
+                    break;
+                case 'gif':  
+                    if (getimagesize($_FILES['userfiles']['tmp_name'][$i]) != false)
+                        $imgcheck = 1;
+                    break;   
+                default:
+                    $imgcheck = 0;
+            }
+
+            //$message = $imgcheck;
+            
+            if($imgcheck == 1)
                 {
                 /***  get the image info. ***/
                 //$size = getimagesize($_FILES['userfile']['tmp_name']);
-                /*** assign our variables ***/
+                /*** assign our variables ***/             
                 $image = file_get_contents($_FILES['userfiles']['tmp_name'][$i]);
                 $thumbnail = thumbnail($_FILES['userfiles']['tmp_name'][$i]);
 
@@ -78,28 +104,32 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
                         trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
                     }
 
-                    $curr_id = 0;
+//                $curr_id = 0;
+//        
+//                $sql = 'SELECT MAX(photo_id) FROM images';
+//                $stid = oci_parse($conn, $sql);
+//                oci_execute($stid);
+//                
+//                $row = oci_fetch_array($stid);
+//
+//                if($row) {
+//                    $curr_id = $row['MAX(PHOTO_ID)'];
+//                }
+//
+//                $curr_id++;
+//
+//                oci_free_statement($stid);
+                
+                    $curr_id = hexdec(uniqid());
 
-                    $sql = 'SELECT MAX(photo_id) FROM images';
-                    $stid = oci_parse($conn, $sql);
-                    oci_execute($stid);
-
-                    $row = oci_fetch_array($stid);
-
-                    if($row) {
-                        $curr_id = $row['MAX(PHOTO_ID)'];
-                    }
-
-                    $curr_id++;
-
-                    oci_free_statement($stid);
-
-                    $message = '<p>Building query</p>';
+                    //$message = '<p>Building query</p>';
 
                     /*** our sql query ***/
                     // Need to assign a unique ID to every picture, and somehow let the uploader choose group for permission
-                    $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\',\''.$date.'\',\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
+                    $sql = 'INSERT INTO images VALUES ('.$curr_id.',\''.$user.'\',\''.$group.'\',\''.$subject.'\',\''.$place.'\',TO_DATE(\''.$date.'\', \'yyyy/mm/dd\'),\''.$description.'\',empty_blob(),empty_blob()) RETURNING thumbnail, photo INTO :thumbnail, :photo'; 
 
+                    //$message = $sql;
+                    
                     $stid = oci_parse($conn, $sql);
 
                     $thumbnail_blob = oci_new_descriptor($conn, OCI_D_LOB);
@@ -143,16 +173,16 @@ if (!empty($_POST) && isset($_POST['submitUpload']) && isset($_FILES['userfiles'
                     throw new Exception("File Size Error");
                     }
                 }
-            else
-                {
-                // if the file is not less than the maximum allowed, print an error
-                throw new Exception("Unsupported Image Format!");
-                }
+//            else
+//                {
+//                // if the file is not less than the maximum allowed, print an error
+//                throw new Exception("Unsupported Image Format!");
+//                }
 
 
 
             $message = '<p>Thank you for submitting</p>';
-            }
+        }
     
         catch(Exception $e)
         {
@@ -233,6 +263,14 @@ function thumbnail($imgfile) {
 			<b><i>Place*: </i></b></td>
 		<td>
 			<input type='text' name='place' id='place' maxlength="128" /><br>
+		</td>
+	</tr>
+        <tr valign=top align=left>
+		<td>
+			<b><i>Date*: </i></b></td>
+		<td>
+                        <!-- CHECK TO SEE IF THIS CAN BE CHANGED TO INPUT TYPE = DATE IN CHROME maxlength="12" -->
+			<input type='date' name='date' id='date'/><br>
 		</td>
 	</tr>
 	<tr valign=top align=left>
