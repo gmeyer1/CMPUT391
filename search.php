@@ -104,11 +104,25 @@ if(!empty($_POST) && isset($_POST['submitSearch'])) {
 }
 else {
     $conn=connect();
-    $sql = 'SELECT thumbnail, photo_id FROM images WHERE (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+    //$sql = 'SELECT thumbnail, photo_id FROM images WHERE (owner_name = \''.$user.'\' or permitted = 1 or permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))';
+    
+    //Awesome sql query to find 5 most popular images that current user can view
+    $sql = 'SELECT i.photo_id, i.thumbnail FROM images i
+JOIN total_views v ON v.photo_id = i.photo_id
+WHERE v.total IN (
+    SELECT t.total FROM total_views t
+    join images p on p.photo_id = t.photo_id 
+    WHERE ROWNUM < 6
+    and (p.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or p.permitted = 1 or
+    p.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
+)
+and (i.owner_name = \''.$user.'\' or \''.$user.'\'=\'admin\' or i.permitted = 1 or
+i.permitted in (SELECT group_id FROM group_lists WHERE friend_id = \''.$user.'\'))
+ORDER BY v.total desc';
+    
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     
-    //Currently will show all images in database, need to find 5 most viewed
     $images = '<br><tr><td>Popular Images: </td></tr>';
     while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
         $id = $row['PHOTO_ID'];
