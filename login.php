@@ -99,3 +99,5 @@ if(!empty($_POST) && isset($_POST['logout'])) {
 </form>
 
 <input type=button onClick="parent.location='register.php'" value='Register...'>
+
+<input type=button onClick="parent.location='https://github.com/gmeyer1/CMPUT391/wiki/User-Documentation'" value='Help'>

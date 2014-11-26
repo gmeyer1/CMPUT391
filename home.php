@@ -71,5 +71,7 @@ if($_SESSION['username'] == 'admin') {
 
 </form>
 
+<input type=button onClick="parent.location='https://github.com/gmeyer1/CMPUT391/wiki/User-Documentation'" value='Help'>
+
 </body>
 </html>
