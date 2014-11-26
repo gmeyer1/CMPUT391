@@ -49,4 +49,5 @@ BEGIN
  ctx_ddl.sync_index('subjIndex');
  ctx_ddl.sync_index('placeIndex');
 END sync_index;
+/
         
