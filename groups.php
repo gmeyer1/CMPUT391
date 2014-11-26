@@ -3,6 +3,7 @@ require_once("helper.php");
 
 session_start();
 if (!$_SESSION['username']) {
+    // If user hasn't started a session, redirect to login page
     redirect('login.php');
 }
 
@@ -11,23 +12,32 @@ $php_self = $_SERVER['PHP_SELF'];
 $conn=connect();
 
 if (isset($_POST['addGroup'])) {
+    // If user is adding a new group
+    
     $group_name = $_POST['group_name'];
     $curr_id = 0;
     
+    // To check if new group already exists for current user
     $sql = 'SELECT user_name FROM groups WHERE user_name = \'' . $user . '\' and group_name = \'' . $group_name . '\'';
     $stid = oci_parse($conn, $sql);
     oci_execute($stid);
     $row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+    
+    
     if ($row) {
+        // Group name already exists for current user
         $message = "Group " . $group_name . " already exists";
         $valid = false;
     }
     else if (empty($group_name)) {
+        // User clicked add group with empty group name
         $message = "Group name cannot be empty";
         $valid = false;
     }
     else {
-    
+        // Valid group name
+        
+        // Get the largest current group ID
         $sql = 'SELECT MAX(group_id) FROM groups';
         $stid = oci_parse($conn, $sql);
         oci_execute($stid);
@@ -38,78 +48,79 @@ if (isset($_POST['addGroup'])) {
             $curr_id = $row['MAX(GROUP_ID)'];
         }
 
+        // Increment to get a new unique ID
         $curr_id++;
 
         oci_free_statement($stid);
 
         $date = date('d.M.y');
+        
+        // To create the new group
         $sql = 'INSERT INTO groups VALUES (\''.$curr_id.'\',\''.$user.'\',\''.$group_name.'\',\''.$date.'\')'; 
 
         $stid = oci_parse($conn, $sql);
         $res=oci_execute($stid);
 
         if (!$res) {
+            // Group could not be created
             $err = oci_error($stid); 
             $message .= htmlentities($err['message']);
             $message .= "<br/>Could not create group " . $group_name;
         }
-        else{ 
+        else {
+            // Group created successfully
             $message = 'Created group ' . $group_name;
         }
         oci_free_statement($stid);
     }
 }
 
-
-
 if ($user == 'admin') {
+    // Admin will be able to edit all groups
     $sql = 'SELECT group_name, group_id FROM groups';
 }
 else {
+    // Non-admin can only edit groups they own
     $sql = 'SELECT group_name, group_id FROM groups WHERE user_name=\'' . $user . '\'';
 }
 
 $stid = oci_parse($conn, $sql);
 oci_execute($stid);
 
-
 $groups = '';
 while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+    // Loop through all groups that current user can edit
     $group_id = $row['GROUP_ID'];
     $group_name = $row['GROUP_NAME'];
     
+    // The HTML selector will have each group as an option
     $groups .= '<option value="'.$group_id.'">'.$group_name.'</option>';
 }
 
 oci_free_statement($stid);
 
-
-
+// To find all groups that current user is a member of
 $sql = 'SELECT g.group_id, g.group_name, g.user_name, l.notice FROM groups g left outer join group_lists l on g.group_id=l.group_id WHERE l.friend_id=\'' . $user . '\'';
-    
 
 $stid = oci_parse($conn, $sql);
 oci_execute($stid);
 
-
 $member_of = '';
 while($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+    // Loop through all groups that the current user is a member of
     $group_id = $row['GROUP_ID'];
     $group_name = $row['GROUP_NAME'];
     $group_owner = $row['USER_NAME'];
     $notice = $row['NOTICE'];
     
+    // Add a row in HTML table to display group name, group owner, and notice
     $member_of .= '<tr><td><b><i>' . $group_name . '</i></b></td><td><b><i>' . $group_owner . '</i></b></td><td><b><i>' . $notice . '</i></b></td></tr>';
 }
 
 oci_free_statement($stid);
-
-
 oci_close($conn);
     
 ?>
-
-
 <html>
 <head>
 <title>Groups</title>
@@ -131,7 +142,6 @@ oci_close($conn);
     accept-charset='UTF-8'>
     
 <table>
-    
     <?php
     if ($groups) {
         echo 'Owner of Groups:';
@@ -143,16 +153,13 @@ oci_close($conn);
     <input type='submit' name='editGroup' value='Edit' />
     <input type='submit' name='deleteGroup' value='Delete' />
     
-           
     <?php
     }
     else {
         echo '<p>Owner of no groups</p>';
     }
     ?>
-    
 </table>
-
 
 </form>
 
@@ -169,16 +176,10 @@ oci_close($conn);
     </td>
     <td><input type="submit" name="addGroup" value="Create"></td>
     </tr>
-
-
 </form>
 
-
 <?php
-
-
 if ($member_of) {
-    
     echo '<table border="1">';
     echo '<caption>Member of Groups:</caption>';
     echo '<tr><td><b><i>Group Name</i></b></td><td><b><i>Group Owner</i></b></td><td><b><i>Notice</i></b></td></tr>';
@@ -189,8 +190,6 @@ else {
     echo '<b><i>Member of no groups</i></b>';
 }
 ?>
-
-
 
 </body>
 </html>
